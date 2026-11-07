@@ -33,7 +33,10 @@
     if (land) {
       const aspect = innerWidth / innerHeight;                            // видимая часть экрана (без панелей браузера)
       const W = Math.round(Math.max(1000, Math.min(1700, TH * (isFinite(aspect) && aspect > 1 ? aspect : sw / sh))));   // узкие телефоны 16:9 — чуть выше
-      content = `width=${W}, user-scalable=no, viewport-fit=cover`;
+      // масштаб задаём явно: иначе Safari на iPhone может «ужать» страницу сильнее, чем нужно
+      const vv = window.visualViewport ? visualViewport.width * visualViewport.scale : sw;   // видимая ширина экрана в точках
+      const sc = Math.max(0.1, Math.min(1, Math.min(sw, vv || sw) / W)).toFixed(4);
+      content = `width=${W}, initial-scale=${sc}, minimum-scale=${sc}, maximum-scale=${sc}, user-scalable=no, viewport-fit=cover, shrink-to-fit=no`;
     } else {
       content = `width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover`;
     }
@@ -51,6 +54,16 @@
   let t = 0;
   const refit = () => { clearTimeout(t); t = setTimeout(() => { fit(); setTimeout(fallback, 150); }, 120); };
   addEventListener("resize", refit); addEventListener("orientationchange", () => setTimeout(fit, 300));
+
+  // Safari на iPhone меняет масштаб страницы с задержкой и не всегда сообщает об этом событием resize.
+  // Следим за размером экрана сами и, если он изменился, просим всё на странице перестроиться.
+  const sig = () => [innerWidth, innerHeight, root.clientWidth, root.clientHeight].join("x");
+  let lastSig = sig();
+  const watch = () => { const s = sig(); if (s !== lastSig) { lastSig = s; dispatchEvent(new Event("resize")); } };
+  setInterval(watch, 400);
+  if (window.visualViewport) visualViewport.addEventListener("resize", watch);
+  addEventListener("load", () => [300, 1000, 2500].forEach((ms) => setTimeout(() => dispatchEvent(new Event("resize")), ms)));
+  addEventListener("pageshow", () => setTimeout(() => dispatchEvent(new Event("resize")), 200));
 
 
   // Полноэкранный режим браузера (Fullscreen API) не используем: в нём Chrome сбрасывает масштаб страницы
