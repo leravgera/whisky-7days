@@ -1,0 +1,14 @@
+{
+  "name": "Семь дней с Виски",
+  "short_name": "Виски",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#140d0a",
+  "theme_color": "#140d0a",
+  "icons": [
+    { "src": "assets/icon192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

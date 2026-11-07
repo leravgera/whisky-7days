@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140d0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Виски">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="mobile.js"></script>
+<title>Семь дней с Виски</title>
+<link rel="preload" href="assets/fonts/rubik.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="assets/fonts/pressstart.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="assets/fonts/caveat.woff" as="font" type="font/woff" crossorigin>
+<link rel="preload" href="assets/fonts/neucha.woff" as="font" type="font/woff" crossorigin>
+<style>
+  :root { --u: 1; }
+  * { box-sizing: border-box; }
+  /* шрифты лежат прямо в сайте (assets/fonts), без внешних сервисов */
+  @font-face { font-family: "Rubik"; src: url("assets/fonts/rubik.woff") format("woff"); font-weight: 300 900; font-display: block; }
+  @font-face { font-family: "Press Start 2P"; src: url("assets/fonts/pressstart.woff") format("woff"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "Caveat"; src: url("assets/fonts/caveat.woff") format("woff"); font-weight: 400 700; font-display: block; }
+  @font-face { font-family: "Neucha"; src: url("assets/fonts/neucha.woff") format("woff"); font-weight: 400; font-display: block; }
+  html, body { margin: 0; height: 100%; background: #0d1020; overflow: hidden; font-family: Rubik, sans-serif; }
+  #wrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; opacity: 0; transition: opacity 1.4s ease; }
+  #stage.on { opacity: 1; }
+  canvas { display: block; width: 100%; height: 100%; cursor: default; }
+  canvas.paw { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' shape-rendering='crispEdges'%3E%3Cg fill='%23fff3e0' stroke='%233a2a20' stroke-width='2'%3E%3Crect x='9' y='15' width='14' height='11' rx='3'/%3E%3Crect x='5' y='8' width='5' height='6' rx='2'/%3E%3Crect x='11' y='4' width='5' height='6' rx='2'/%3E%3Crect x='17' y='4' width='5' height='6' rx='2'/%3E%3Crect x='23' y='8' width='5' height='6' rx='2'/%3E%3C/g%3E%3C/svg%3E") 16 16, pointer; }
+
+  .bubble { position: absolute; z-index: 5; max-width: calc(380px * var(--u)); min-width: calc(120px * var(--u));
+    background: #fffaf0; color: #2b1d14; border: calc(3px * var(--u)) solid #2b1d14; border-radius: calc(10px * var(--u));
+    padding: calc(12px * var(--u)) calc(16px * var(--u)); font-size: max(13px, calc(20px * var(--u))); line-height: 1.3;
+    box-shadow: 0 calc(4px * var(--u)) 0 rgba(0,0,0,.25); pointer-events: none; opacity: 0; transform: translateY(6px);
+    transition: opacity .2s, transform .2s; }
+  .bubble.show { opacity: 1; transform: none; }
+  .bubble.wait { pointer-events: auto; cursor: pointer; }
+  .bubble::after { content: ""; position: absolute; left: var(--tail, 50%); bottom: calc(-14px * var(--u)); margin-left: calc(-9px * var(--u));
+    border: calc(9px * var(--u)) solid transparent; border-top-color: #2b1d14; border-bottom: 0; }
+  .bubble .more { display: block; text-align: right; font-size: .7em; opacity: .55; margin-top: 4px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .15; } }
+
+  #skip { position: absolute; right: 1.2%; bottom: 2%; z-index: 6; font: inherit; font-size: max(12px, calc(16px * var(--u)));
+    background: rgba(20,16,30,.65); color: #f4e6cf; border: 2px solid rgba(244,230,207,.4); border-radius: 8px; padding: .4em .9em; cursor: pointer; display: none; }
+  #hint { position: absolute; z-index: 6; pointer-events: none; font-size: max(11px, calc(15px * var(--u))); color: #fff3df;
+    background: rgba(30,20,20,.8); padding: .3em .6em; border-radius: 6px; display: none; white-space: nowrap; }
+  html.touch #hint { font-size: max(15px, calc(19px * var(--u))); padding: .4em .75em; border-radius: 8px; }
+  #test { position: fixed; left: 50%; transform: translateX(-50%); top: 6px; z-index: 30; white-space: nowrap; font: 12px Rubik, sans-serif; color: #ffd98a; background: rgba(0,0,0,.6);
+    padding: 6px 10px; border-radius: 6px; display: none; }
+  #test a { color: #9fd3ff; margin-left: 8px; cursor: pointer; }
+
+  /* calendar overlay */
+  #cal { position: fixed; inset: 0; z-index: 20; display: none; overflow: hidden; align-items: center; justify-content: center; background: rgba(8,10,24,.55);
+    backdrop-filter: blur(2px); }
+  #cal.open { display: flex; }
+  #board .bonusbtn { position: absolute; right: 4%; bottom: 5%; font: 700 17px Rubik, sans-serif; padding: 10px 18px; border-radius: 10px; border: 3px solid #3a2416;
+    background: linear-gradient(#ffe48a, #f2b742); color: #3a2416; cursor: pointer; box-shadow: 0 4px 0 #3a2416, 0 0 18px rgba(255,214,110,.7); animation: bonusGlow 1.6s ease-in-out infinite; }
+  @keyframes bonusGlow { 50% { box-shadow: 0 4px 0 #3a2416, 0 0 34px rgba(255,214,110,1); } }
+  #veil { position: fixed; inset: 0; z-index: 100; background: #0d1020; opacity: 0; pointer-events: none; transition: opacity .38s ease; }
+  /* загрузка: следы лапок */
+  #boot { position: fixed; inset: 0; z-index: 200; background: #0d1020; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .5s ease; }
+  #boot.done { opacity: 0; pointer-events: none; }
+  .ld { display: flex; flex-direction: column; align-items: center; gap: 16px; font: 500 18px Rubik, sans-serif; color: #ffd98a; letter-spacing: .5px; }
+  #veil .ld { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity .25s; }
+  #veil.loading .ld { opacity: 1; }
+  .paws { display: flex; gap: 22px; align-items: flex-end; }
+  .ld .lpaw { position: relative; width: 34px; height: 34px; opacity: .12; animation: pawstep 1.5s infinite; }
+  .ld .lpaw:nth-child(1) { transform: rotate(-12deg); }
+  .ld .lpaw:nth-child(2) { animation-delay: .25s; transform: translateY(-14px) rotate(8deg); }
+  .ld .lpaw:nth-child(3) { animation-delay: .5s; transform: rotate(-12deg); }
+  .ld .lpaw:nth-child(4) { animation-delay: .75s; transform: translateY(-14px) rotate(8deg); }
+  .ld .lpaw::before { content: ""; position: absolute; left: 7px; top: 14px; width: 21px; height: 17px; border-radius: 50% 50% 46% 46%; background: #ffd98a; }
+  .ld .lpaw i { position: absolute; width: 8px; height: 10px; border-radius: 50%; background: #ffd98a; }
+  .ld .lpaw i:nth-child(1) { left: 1px; top: 7px; } .ld .lpaw i:nth-child(2) { left: 9px; top: 0; } .ld .lpaw i:nth-child(3) { left: 18px; top: 0; } .ld .lpaw i:nth-child(4) { left: 26px; top: 7px; }
+  @keyframes pawstep { 0%, 100% { opacity: .12; } 25% { opacity: 1; } 55% { opacity: .12; } }
+  .board { position: relative; width: min(860px, 92vw); flex: none; padding: 30px 40px 24px; border-radius: 14px;
+    background: repeating-linear-gradient(45deg, #c49a64 0 6px, #be945e 6px 12px); border: 8px solid #6b4628;
+    box-shadow: 0 0 0 3px #3a2416, 0 20px 60px rgba(0,0,0,.5); animation: pop .35s ease; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .board h2 { margin: 0 0 22px; text-align: center; font: 400 23px/1.4 "Press Start 2P", Rubik, sans-serif; color: #fff6e3; text-shadow: 2px 2px 0 #6b4628; letter-spacing: 0; }
+  .twine { position: absolute; left: 30px; right: 30px; height: 2px; background: #7a5a3a; }
+  .envs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 14px; justify-items: center; }
+  .envs .env:nth-child(5) { grid-column: 1 / span 1; }
+  .envs .row2 { grid-column: 1 / -1; display: flex; justify-content: center; gap: 14px; }
+  .env { position: relative; width: 160px; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: pointer;
+    background: none; border: 0; font: inherit; padding: 0; }
+  .env::before { content: ""; position: absolute; top: 0; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #c9a04a; box-shadow: 0 2px 0 #6b4628; }
+  .env img { width: 128px; image-rendering: auto; transition: transform .15s; }
+  @media (hover: hover) { .env:hover img { transform: translateY(-4px) rotate(-2deg); } }
+  .env.today img { width: 140px; }
+  .env.done img { width: 139px; }
+  .env.future img { filter: saturate(.55) brightness(.85); }
+  .env.today img { animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { filter: drop-shadow(0 0 10px #ffd66b) brightness(1.08); } }
+  .env .date { margin-top: 6px; font: 700 15px Rubik, sans-serif; letter-spacing: .3px; color: #3a2416; background: #f5e7c8; padding: 5px 7px; border-radius: 4px; box-shadow: 0 2px 0 #6b4628; }
+  .env.future .date { opacity: .65; }
+  .close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border-radius: 8px; border: 2px solid #3a2416; background: #f5e7c8;
+    font: 700 18px Rubik, sans-serif; color: #3a2416; cursor: pointer; line-height: 1; }
+  .mini { display: flex; align-items: flex-end; gap: 18px; margin: 18px 0 -6px; min-height: 118px; pointer-events: none; }
+  .mini img { width: 96px; flex: none; }
+  .mini .bubble { position: relative; left: auto; top: auto; --u: .85; align-self: center; max-width: 520px; min-width: 0; }
+  .mini .bubble::after { left: calc(-13px * var(--u)); top: 50%; bottom: auto; margin: calc(-9px * var(--u)) 0 0;
+    border: calc(9px * var(--u)) solid transparent; border-right-color: #2b1d14; border-left: 0; }
+  #board .albopen { position: absolute; left: 22px; top: 66px; font: 700 14px Rubik, sans-serif; padding: 8px 14px; border-radius: 9px; border: 3px solid #3a2416;
+    background: #ffd98a; color: #3a2416; cursor: pointer; box-shadow: 0 3px 0 #3a2416; }
+  .album { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 12px; justify-items: center; }
+  .album .arow2 { grid-column: 1 / -1; display: flex; justify-content: center; gap: 12px; }
+  .aslot { width: 156px; height: 231px; position: relative; padding: 0; border: 0; background: none; }
+  .aslot.got { cursor: pointer; transition: transform .15s; }
+  @media (hover: hover) { .aslot.got:hover { transform: translateY(-5px) rotate(-1.5deg); } }
+  .aslot.got .vcard { zoom: .6; margin: 0 !important; }
+  .aslot.got .vcard .in { transition: none; }
+  .aslot.empty { border-radius: 12px; border: 3px dashed rgba(58,36,22,.45); background: rgba(58,36,22,.12); box-sizing: border-box;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .aslot.empty .aq { font: 400 40px "Press Start 2P", Rubik, sans-serif; color: rgba(58,36,22,.4); }
+  .aslot.empty .ad { font: 700 14px Rubik, sans-serif; color: rgba(58,36,22,.55); }
+  .ahint { margin: 16px 0 10px; text-align: center; font: 600 16px Rubik, sans-serif; color: #3a2416; }
+  .abtns { display: flex; justify-content: center; gap: 6px; }
+  .abig { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(30,18,10,.7); border-radius: 14px; z-index: 5; }
+  .abig.show { display: flex; }
+  .abig .abigin { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .env .cdown { position: absolute; left: 50%; bottom: -21px; transform: translateX(-50%); font: 700 12px Rubik, sans-serif; color: #fff6e3; text-shadow: 1px 1px 0 #6b4628; white-space: nowrap; }
+  #board .svopen { position: absolute; left: 22px; top: 22px; font: 700 14px Rubik, sans-serif; padding: 8px 14px; border-radius: 9px; border: 3px solid #3a2416;
+    background: #f5e7c8; color: #3a2416; cursor: pointer; box-shadow: 0 3px 0 #3a2416; opacity: .9; }
+  .sv { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 620px; margin: 0 auto; }
+  .sv .svtxt { margin: 0; font: 500 16px/1.4 Rubik, sans-serif; color: #3a2416; text-align: center; }
+  .sv .svsub { margin-top: 10px; }
+  .sv textarea { width: 100%; box-sizing: border-box; height: 64px; resize: none; border-radius: 8px; border: 3px solid #3a2416; background: #fffaf0;
+    font: 600 13px/1.35 ui-monospace, Menlo, Consolas, monospace; color: #3a2416; padding: 8px 10px; word-break: break-all; overflow: hidden; }
+  .sv .svbtns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .sv .svmsg { min-height: 20px; font: 600 15px Rubik, sans-serif; text-align: center; }
+  .sv .svmsg.ok { color: #2f6b2a; } .sv .svmsg.bad { color: #9a2b22; }
+  .sv .svreset { margin-top: 2px; font: 600 13px Rubik, sans-serif; color: #7a3a22; background: none; border: 0; border-bottom: 2px dashed rgba(122,58,34,.45); padding: 3px 2px; cursor: pointer; opacity: .8; }
+  .sv .svreset.sure { color: #fff6e3; background: #b8432f; border: 3px solid #3a2416; border-radius: 8px; padding: 7px 12px; opacity: 1; box-shadow: 0 3px 0 #3a2416; }
+  .env:focus { outline: none; }
+  .env:focus-visible img { filter: drop-shadow(0 0 6px #fff3c4); }
+
+  .day { text-align: center; color: #3a2416; }
+  .day .tag { font: 700 15px Rubik, sans-serif; opacity: .7; }
+  .day h3 { font: 400 20px "Press Start 2P", Rubik, sans-serif; line-height: 1.6; margin: 14px 0 18px; color: #fff6e3; text-shadow: 3px 3px 0 #6b4628; }
+  .day p { font-size: 18px; background: #fffaf0; display: inline-block; padding: 14px 20px; border-radius: 10px; border: 3px solid #3a2416; margin: 0 0 20px; }
+  .btn { font: 700 15px Rubik, sans-serif; padding: 12px 16px; margin: 0 6px; border-radius: 8px; border: 3px solid #3a2416; background: #f5e7c8; color: #3a2416;
+    cursor: pointer; box-shadow: 0 4px 0 #3a2416; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #3a2416; }
+  .btn.alt { background: #d9eef5; }
+</style>
+</head>
+<body>
+<div id="boot"><div class="ld"><div class="paws"><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div></div><div>Загрузка…</div></div></div>
+<div id="wrap">
+  <div id="stage">
+    <canvas id="cv" width="1913" height="822"></canvas>
+    <div class="bubble" id="bubble"></div>
+    <button id="skip">Пропустить ▸▸</button>
+    <div id="hint">Зажми, чтобы погладить</div>
+  </div>
+</div>
+
+<div id="veil"><div class="ld"><div class="paws"><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div><div class="lpaw"><i></i><i></i><i></i><i></i></div></div><div>Загрузка…</div></div></div>
+<div id="cal">
+  <div class="board" id="board"></div>
+</div>
+<div id="test">Тестовый режим: все дни открыты <a id="reset">↺ начать сначала</a></div>
+
+<script src="texts.js"></script>
+<script src="meows.js"></script>
+<script src="sound.js"></script>
+<script src="cards.js"></script>
+<script src="game25.js"></script>
+<script src="shell.js"></script>
+<script src="game26.js"></script>
+<script src="game27.js"></script>
+<script src="game28.js"></script>
+<script src="game29.js"></script>
+<script src="game30.js"></script>
+<script src="game31.js"></script>
+<script src="bonus.js"></script>
+<script>
+(async function () {
+"use strict";
+const BW = 1913, BH = 822;
+const FLOOR = 772, BED = { x: 200, y: 590 }, BED_EDGE = 470;
+const SIZE = 1.0;                    // общий масштаб Виски
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const stage = document.getElementById("stage");
+const bubble = document.getElementById("bubble");
+const hintEl = document.getElementById("hint");
+const skipBtn = document.getElementById("skip");
+const now = () => performance.now();
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// ---------- хранение прогресса ----------
+const KEY = "viski7.progress";
+let P = { intro: false, calFound: false, days: {} };
+try { const s = localStorage.getItem(KEY); if (s) P = Object.assign(P, JSON.parse(s)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+
+if (location.hash === "#sbros") { try { localStorage.removeItem(KEY); } catch (e) {} P = { intro: false, calFound: false, days: {} }; }
+const DEV = false;                    // панель разработки; перед подарком поставить false
+let TEST = DEV && location.hash === "#vse-dni";   // в финальной версии этот адрес ничего не открывает
+const testEl = document.getElementById("test");
+function renderTestBar() {
+  testEl.innerHTML = `${TEST ? "Тест: все дни открыты" : "Тест: по 12 часов"} <a id="tgl">${TEST ? "закрыть дни" : "открыть все дни"}</a> <a id="skip12">⏩ −12 ч</a> <a id="reset">↺ начать сначала</a> <a id="bon">★ бонус</a> <a id="fwt">✦ салют</a>`;
+  testEl.querySelector("#skip12").onclick = () => { for (const d in P.days) if (P.days[d].openedAt) P.days[d].openedAt -= GAP; save(); if (calOpen) renderCal(); };
+  testEl.querySelector("#bon").onclick = () => window.openBonus && window.openBonus({ beforeShow: () => { calEl.classList.remove("open"); calOpen = false; } });
+  testEl.querySelector("#tgl").onclick = () => { TEST = !TEST; renderTestBar(); if (calOpen) renderCal(); };
+  testEl.querySelector("#reset").onclick = () => window.__restart && window.__restart();
+  testEl.querySelector("#fwt").onclick = () => { window.__fwTest = performance.now() + 20000; };
+}
+if (DEV || TEST) { testEl.style.display = "block"; renderTestBar(); }
+
+// ---------- открытие конвертов: первый сразу, каждый следующий через 12 часов после того, как открыт предыдущий ----------
+const GAP = 12 * 3600 * 1000;
+const isDone = (d) => !!(P.days[d] && P.days[d].game);
+const openedAt = (d) => (P.days[d] && P.days[d].openedAt) || 0;
+const unlockAt = (d) => d <= 25 ? 0 : openedAt(d - 1) ? openedAt(d - 1) + GAP : Infinity;
+const isOpen = (d) => TEST || isDone(d) || !!openedAt(d) || Date.now() >= unlockAt(d);
+function leftText(d) {
+  const u = unlockAt(d); if (u === Infinity) return "";
+  const min = Math.max(1, Math.ceil((u - Date.now()) / 60000)), h = Math.floor(min / 60), m = min % 60;
+  return "через " + (h ? h + " ч" + (m ? " " + m + " мин" : "") : m + " мин");
+}
+function markOpened(d) { if (openedAt(d)) return; P.days[d] = P.days[d] || {}; P.days[d].openedAt = Date.now(); save(); }
+
+// ---------- загрузка ----------
+const load = (src) => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; });
+const [room, atlas, meta] = await Promise.all([
+  load("assets/room.webp"), load("assets/whisky.webp"), fetch("assets/sprites.json").then(r => r.json())
+]);
+const A = meta.anims; window.__W = W_dbg => W;
+A.eat = [A.groom[0], A.sad[0]];                       // ест из миски: голову вниз, к миске, и обратно
+// корона «Хозяйки дома» (31 декабря): картинка и место на голове для каждого кадра
+let crownImg = null, crownAt = {};
+Promise.all([load("assets/crown.png"), fetch("assets/crown.json").then(r => r.json())]).then(([i, j]) => { crownImg = i; crownAt = j; }).catch(() => {});
+const hasCrown = () => !!(P.days[31] && (P.days[31].openedAt || P.days[31].game));
+
+// ---------- зоны предметов ----------
+const ZONES = [
+  ["calendar", 50, 105, 285, 190], ["stitch", 462, 52, 125, 92], ["toys", 582, 92, 150, 52], ["toys", 400, 400, 92, 185],
+  ["books", 398, 238, 98, 128], ["books", 545, 165, 100, 80], ["tv", 525, 388, 258, 168], ["window", 895, 90, 237, 420],
+  ["curtain", 800, 60, 92, 590], ["curtain", 1135, 60, 92, 590], ["radiator", 903, 545, 222, 98], ["tree", 1150, 250, 222, 392],
+  ["picture", 1325, 118, 425, 205], ["keyboard", 1390, 485, 52, 18], ["keyboard", 1629, 485, 50, 18],
+  ["computer1", 1347, 390, 201, 66], ["computer1", 1546, 376, 79, 124],
+  ["computer2", 1636, 390, 102, 66], ["computer2", 1745, 368, 82, 132], ["chair", 1630, 442, 132, 220],
+  ["bed", 0, 410, 388, 352], ["door", 1835, 140, 78, 520], ["lights", 0, 14, 1913, 72],
+].map(([k, x, y, w, h]) => ({ k, x, y, w, h })).sort((a, b) => a.w * a.h - b.w * b.h);
+// ---------- подарки в комнате: подарок дня появляется после «Подарок найден!» ----------
+const GIFT_AT = { 25: [1585, 378], 26: [1371, 505], 27: [1000, 519], 28: [1203, 693], 29: [1283, 695], 30: [1352, 691], 31: [1060, 519] };
+const GIFT_DAYS = [25, 26, 27, 28, 29, 30, 31];
+let giftImg = null, giftMeta = {}; const giftPop = {};   // время появления (только в памяти)
+Promise.all([window.__veil("assets/gifts.bin", "image/webp").then(load), fetch("assets/gifts.json").then(r => r.json())]).then(([i, j]) => { giftImg = i; giftMeta = j; }).catch(() => {});
+const giftFound = (d) => !!(P.days[d] && P.days[d].found);
+function giftBox(d) {
+  const m = giftMeta[d]; if (!m) return null; const [x, y] = GIFT_AT[d], h = m[4], w = m[2] * h / m[3];
+  return { k: "gift" + d, x: x - w / 2, y: y - h, w, h };
+}
+function drawGifts(t) {
+  if (!giftImg) return;
+  const roomVisible = !calOpen && !window.__gameOpen && !introRunning;
+  let newOnes = 0;
+  for (const d of [27, 25, 26, 31, 28, 29, 30]) {
+    if (!giftFound(d)) continue;
+    const b = giftBox(d), m = giftMeta[d], dd = P.days[d]; if (!b) continue;
+    if (!dd.giftAt) {                              // новый подарок: ждём, пока комната видна, и тогда «выпрыгивает»
+      if (!roomVisible) continue;
+      dd.giftAt = Date.now(); save(); giftPop[d] = t + 450 + newOnes * 300; newOnes++;
+      setTimeout(() => SFX.ding(), 450);
+    }
+    if (giftPop[d] && t < giftPop[d]) continue;
+    const k = giftPop[d] ? Math.min(1, (t - giftPop[d]) / 650) : 1, s = k < 1 ? 1 + Math.sin(k * Math.PI) * 0.25 : 1;
+    ctx.save(); ctx.globalAlpha = Math.min(1, k * 2);
+    ctx.fillStyle = "rgba(20,10,10,0.22)"; ctx.beginPath(); ctx.ellipse(b.x + b.w / 2, b.y + b.h - 1, b.w * 0.42, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.translate(b.x + b.w / 2, b.y + b.h); ctx.scale(s, s);
+    ctx.drawImage(giftImg, m[0], m[1], m[2], m[3], -b.w / 2, -b.h, b.w, b.h); ctx.restore();
+    if (k < 1) {                                   // появление: искорки
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + k * 2, r = 14 + k * 34;
+        ctx.globalAlpha = (1 - k) * 0.9; ctx.drawImage(glow, b.x + b.w / 2 + Math.cos(a) * r - 9, b.y + b.h / 2 + Math.sin(a) * r * 0.7 - 9, 18, 18); }
+      ctx.restore();
+    }
+  }
+}
+const zoneAt = (x, y) => {
+  if (giftImg) for (const d of GIFT_DAYS) {
+    if (!giftFound(d) || !P.days[d].giftAt) continue; const b = giftBox(d);
+    if (b && x >= b.x - 4 && x < b.x + b.w + 4 && y >= b.y - 4 && y < b.y + b.h + 4) return b;
+  }
+  const bb = bowlBox(); if (bb && x >= bb.x && x < bb.x + bb.w && y >= bb.y && y < bb.y + bb.h) return bb;
+  return ZONES.find(z => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h);
+};
+// конверты на настенном календаре (для подсветки)
+const WALL_ENV = [[70, 128], [133, 128], [196, 128], [258, 128], [100, 208], [163, 208], [228, 208]];
+
+// ---------- Виски ----------
+const W = { calmUntil: 0, v: 0, phase: 0, x: BED.x, y: BED.y, face: 1, anim: "sleep", fps: 1.2, loop: true, t0: 0, once: false, ctx: "sleep", asleep: true, onBed: true, moveTo: null, speed: 0 };
+function setAnim(name, fps = 8, loop = true) { if (name !== "sleep" && name !== "wake") W.asleep = false; if (W.anim !== name || !loop) { W.anim = name; W.t0 = now(); W.phase = 0; } W.fps = fps; W.loop = loop; }
+function frame() {
+  const fr = A[W.anim]; const n = fr.length;
+  let i = (W.anim === "walk" || W.anim === "run") ? Math.floor(W.phase) : Math.floor((now() - W.t0) / 1000 * W.fps);
+  i = W.loop ? i % n : Math.min(i, n - 1);
+  return fr[i];
+}
+function catBox() { const f = frame(); const s = SIZE; return { x: W.x - f.ax * s, y: W.y - f.ay * s, w: f.w * s, h: f.h * s }; }
+
+let tok = 0;                         // токен прерывания поведения
+const CANCEL = {};
+const sleepMs = (ms) => new Promise(r => setTimeout(r, ms));
+async function wait(ms, my) { const end = now() + ms; while (now() < end) { if (my !== tok) throw CANCEL; await sleepMs(40); } }
+const SITTING = new Set(["sit", "talk", "lookup", "groom", "yawn", "love", "tail", "swat", "alert", "happy", "angry", "shy", "wake", "sad", "puzzled", "eat"]);
+async function playOnce(name, fps, my) { setAnim(name, fps, false); await wait(A[name].length / fps * 1000 + 30, my); }
+async function getUp(my) {                         // из любой позы — встать на четыре лапы
+  if (W.anim === "loaf" || W.anim === "sleep" || W.anim === "lieDown") await playOnce("lieUp", 7, my);
+  if (SITTING.has(W.anim) || W.anim === "lieUp") await playOnce("standUp", 8, my);
+}
+async function turnTo(dir, my) {                   // разворот через кадр «мордочкой к зрителю»
+  if (dir === W.face) return;
+  const name = W.face > 0 ? "turn" : "turnBack"; W.face = 1;
+  await playOnce(name, 7, my); W.face = dir;
+}
+async function walkTo(x, my, run = false) {
+  x = Math.max(430, Math.min(1800, x));
+  if (Math.abs(x - W.x) < 4) return;
+  await getUp(my);
+  await turnTo(x > W.x ? 1 : -1, my);
+  setAnim(run ? "run" : "walk", run ? 13 : 14);
+  W.speed = run ? 470 : 185; W.moveTo = x; W.ctx = "walk";
+  while (W.moveTo !== null) { if (my !== tok) { W.moveTo = null; throw CANCEL; } await sleepMs(30); }
+  if (my !== tok) throw CANCEL;                   // остановили на ходу (погладили, позвали): не садимся поверх новой позы
+  await playOnce("sitDown", 8, my); setAnim("sit", 2.5);
+}
+async function jump(tx, ty, my) {
+  W.face = tx > W.x ? 1 : -1;
+  const J = ty < W.y ? "jumpUp" : "jumpDown", arc = ty < W.y ? 120 : 45;
+  setAnim(J, 1, false); W.t0 = now(); W.fps = 0.001;          // присела
+  await wait(220, my);
+  const sx = W.x, sy = W.y, dur = 620, t0 = now();
+  W.anim = J; W.fps = 0; W.t0 = now() - 1000;                    // кадр 1 (полёт)
+  A.__force = 1;
+  while (now() - t0 < dur) {
+    if (my !== tok) { A.__force = null; throw CANCEL; }
+    const k = (now() - t0) / dur;
+    W.x = sx + (tx - sx) * k; W.y = sy + (ty - sy) * k - Math.sin(Math.PI * k) * arc;
+    await sleepMs(16);
+  }
+  W.x = tx; W.y = ty; A.__force = 2; SFX.land(); await wait(200, my); A.__force = null;
+  W.onBed = ty < FLOOR - 50;
+}
+async function sitIdle(ms, my, c = "sitting") { setAnim("sit", 2.5); W.ctx = c; await wait(ms, my); }
+
+// жизнь Виски
+let lifeOn = false;
+async function life() {
+  if (lifeOn) return; lifeOn = true;
+  while (true) {
+    const my = tok;
+    try {
+      if (busy() || now() < W.calmUntil) { await sleepMs(300); continue; }
+      if (!W.onBed && Math.random() < 0.3) { if (Math.random() < 0.4) { await playOnce("lieDown", 6, my); setAnim("loaf", 0.25); W.ctx = "sitting"; await wait(rnd(8000, 15000), my); await playOnce("lieUp", 6, my); } else await sitIdle(rnd(5000, 10000), my); continue; }
+      if (W.onBed) {
+        if (W.asleep) { if (W.anim !== "sleep") setAnim("sleep", 1.2); await wait(rnd(6000, 14000), my); await wakeUp(my, true); }
+        else if (W.anim === "wake" || W.anim === "yawn") setAnim("sit", 2.5);
+        await jump(BED_EDGE, FLOOR, my); W.asleep = false;
+        continue;
+      }
+      if (floorGifts().length && Math.random() < 0.09) { await sniffGifts(my); continue; }
+      const r = Math.random();
+      if (r < 0.28) { await walkTo(rnd(450, 1780), my); await sitIdle(rnd(6000, 12000), my); }
+      else if (r < 0.40) { await walkTo(rnd(500, 1500), my); setAnim("groom", 3.5); W.ctx = "groom"; await wait(rnd(5000, 8000), my); }
+      else if (r < 0.50) { await walkTo(1010, my); setAnim("lookup", 1); W.face = 1; W.ctx = "window"; await wait(rnd(7000, 12000), my); }
+      else if (r < 0.60) { await walkTo(1470, my); W.ctx = "computer"; await sitIdle(rnd(6000, 10000), my, "computer"); }
+      else if (r < 0.68) { await eatAtBowl(my, false); }
+      else if (r < 0.76) { await walkTo(1105, my); W.face = 1; W.ctx = "tree"; SFX.whoosh(); setAnim("swat", 7, false); await wait(900, my); await sitIdle(800, my); setAnim("swat", 7, false); await wait(900, my); await sitIdle(1500, my); }
+      else if (r < 0.82) { await walkTo(rnd(500, 1700), my, true); await sitIdle(rnd(5000, 8000), my); }
+      else if (r < 0.88) { await getUp(my); setAnim("stretch", 1.2, false); W.ctx = "stretch"; await wait(2600, my); await playOnce("sitDown", 7, my); await sitIdle(4000, my); }
+      else if (r < 0.94) { await playOnce("lieDown", 6, my); setAnim("sleep", 1.2); W.asleep = true; W.ctx = "sleep"; await wait(rnd(9000, 15000), my); await wakeUp(my, false); }
+      else { await walkTo(BED_EDGE, my); await jump(BED.x, BED.y, my); setAnim("sleep", 1.2); W.asleep = true; W.ctx = "sleep"; await wait(rnd(14000, 22000), my); await wakeUp(my, false); }
+    } catch (e) { if (e !== CANCEL) console.error(e); await sleepMs(100); }
+  }
+}
+async function wakeUp(my, quiet) {
+  try {
+    setAnim("wake", 1, false); W.t0 = now(); await wait(1000, my);   // открыла глаза → потянулась → зевнула
+    W.asleep = false; await wait(1900, my);
+  } catch (e) {                                                       // прервали посреди зевка — просто садится, а не застывает с открытым ртом
+    W.asleep = false; if (W.anim === "wake") setAnim("sit", 2.5); throw e;
+  }
+  if (!quiet && Math.random() < 0.3) say("idle.wake", { prio: 0 });
+  await sitIdle(700, my);
+}
+function interrupt() { tok++; W.moveTo = null; A.__force = null; }
+
+// ---------- реплики ----------
+let cur = null, lastByKey = {};
+const lineBags = {};
+function line(key) {                       // «мешок»: каждая фраза звучит по разу, пока не прозвучат все варианты
+  const arr = LINES[key] || [key];
+  if (arr.length < 2) return arr[0];
+  let bag = lineBags[key];
+  if (!bag || !bag.length) {
+    bag = lineBags[key] = arr.slice();
+    for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    if (bag[0] === lastByKey[key]) bag.push(bag.shift());
+  }
+  const t = bag.shift(); lastByKey[key] = t; return t;
+}
+function say(key, { prio = 1, waitClick = false, dur } = {}) {
+  if (cur && cur.prio > prio && now() < cur.until) return Promise.resolve();
+  if (cur && cur.resolve) cur.resolve();
+  const text = line(key);
+  bubble.innerHTML = "";
+  bubble.textContent = text;
+  if (waitClick) { const m = document.createElement("span"); m.className = "more"; m.textContent = "дальше ▸"; bubble.appendChild(m); }
+  bubble.classList.toggle("wait", waitClick);
+  bubble.classList.add("show"); SFX.pop();
+  if (prio >= 2 && !key.startsWith("pet.") && Math.random() < 0.5) SFX.meow();
+  const d = dur || Math.min(7000, Math.max(2600, 1600 + text.length * 55));
+  return new Promise(res => {
+    cur = { prio, waitClick, until: waitClick ? Infinity : now() + d, resolve: null };
+    const me = cur;
+    me.resolve = () => { if (cur === me) { cur = null; bubble.classList.remove("show", "wait"); } res(); };
+    if (!waitClick) setTimeout(me.resolve, d);
+  });
+}
+const has = (key) => !!(LINES[key] && LINES[key].length);
+function objectKey(k) {                    // иногда вспоминает пройденные дни: «object.tree@25» и т. п.
+  if (k === "window" && fwMode() && has("newyear.window") && Math.random() < 0.6) return "newyear.window";
+  const extra = [25, 26, 27, 28, 29, 30, 31].filter(d => isDone(d) && has(`object.${k}@${d}`)).map(d => `object.${k}@${d}`);
+  return extra.length && Math.random() < 0.5 ? pick(extra) : "object." + k;
+}
+function placeBubble() {
+  if (!cur) return;
+  const s = stage.clientWidth / BW, b = catBox();
+  const hx = W.x + (W.face > 0 ? 25 : -25) * SIZE, hy = b.y + 6;
+  const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+  let left = hx * s - bw / 2, top = hy * s - bh - 18 * s;
+  left = Math.max(8, Math.min(stage.clientWidth - bw - 8, left));
+  top = Math.max(8, top);
+  bubble.style.left = left + "px"; bubble.style.top = top + "px";
+  bubble.style.setProperty("--tail", Math.max(16, Math.min(bw - 16, hx * s - left)) + "px");
+}
+bubble.addEventListener("click", () => { if (cur && cur.waitClick) cur.resolve(); });
+
+// случайные реплики
+let nextRandom = now() + rnd(65000, 130000), lastInput = now(), saidIdle = false;
+const CTX_KEY = { sitting: "idle.sitting", walk: "idle.walk", groom: "idle.groom", window: "idle.window", computer: "idle.computer", food: "idle.food", stretch: "idle.stretch", sleep: "idle.sleep", tree: "object.tree" };
+function randomTalk() {
+  if (busy() || cur || W.asleep && W.ctx !== "sleep") return;
+  if (!saidIdle && now() - lastInput > 90000 && !W.asleep) { saidIdle = true; say("idle.no_action", { prio: 0 }); return; }
+  if (now() < nextRandom) return;
+  nextRandom = now() + rnd(65000, 130000);
+  if (Math.random() < 0.05) { say("idle.rare", { prio: 0 }); return; }
+  if (W.asleep) { if (Math.random() < 0.5) say("idle.sleep", { prio: 0 }); return; }
+  say(CTX_KEY[W.ctx] || (Math.random() < 0.5 ? "idle.look" : "idle.sitting"), { prio: 0 });
+}
+
+// ---------- состояние сцены ----------
+let introRunning = false, calOpen = false;
+const busy = () => introRunning || pet.on || calOpen || !!window.__gameOpen;
+
+// ---------- поглаживание ----------
+const pet = { on: false, t0: 0, stage: 0, hearts: [] };
+let petHintShown = false;
+function petStart() {
+  if (!P.petTried) { P.petTried = true; save(); }
+  clearTimeout(touchTipT); hintEl.style.display = "none";
+  interrupt(); pet.on = true; pet.t0 = now(); pet.stage = 0; petHintShown = true; hintEl.style.display = "none";
+  W.moveTo = null;
+  if (W.asleep) { pet.stage = 9; SFX.meow("angry"); say("pet.sleeping", { prio: 2 }); setAnim("angry", 1); W.asleep = false; if (W.onBed) {} return; }
+  setAnim("love", 1); SFX.purrStart(); say("pet.start", { prio: 2 });
+}
+function petTick() {
+  if (!pet.on || pet.stage >= 9) return;
+  const e = now() - pet.t0;
+  if (pet.stage < 3 && Math.random() < 0.08) pet.hearts.push({ x: W.x + rnd(-40, 40), y: catBox().y + 20, t: now() });
+  if (e > 2000 && pet.stage === 0) { pet.stage = 1; SFX.purrStop(); setAnim("tail", 2.5); say("pet.warning", { prio: 2 }); }
+  if (e > 4300 && pet.stage === 1) { pet.stage = 2; setAnim("tail", 4.5); }
+  if (e > 5000 && pet.stage === 2) { pet.stage = 3; say("pet.stop", { prio: 2 }); }
+  if (e > 6100 && pet.stage === 3) { pet.stage = 9; SFX.hiss(); setTimeout(() => SFX.whoosh(), 120); setAnim("swat", 8, false); say("pet.swat", { prio: 2 }); pet.swatAt = now(); }
+}
+function petEnd() {
+  if (!pet.on) return;
+  const e = now() - pet.t0; pet.on = false; SFX.purrStop(); W.calmUntil = now() + 6000;
+  if (pet.stage === 9) { setTimeout(() => { if (!pet.on) { setAnim("tail", 2); setTimeout(() => !pet.on && !busy() && resume(), 2600); } }, 900); return; }
+  if (e > 2000) { say("pet.respect", { prio: 2 }); setAnim("happy", 1); setTimeout(() => !pet.on && resume(), 3000); }
+  else { setAnim("happy", 1); setTimeout(() => !pet.on && resume(), 2500); }
+}
+function resume() {
+  tok++;
+  if (W.anim === "wake") { W.asleep = false; setAnim("sit", 2.5); }           // не оставляем её застывшей в зевке
+  if (!W.onBed) sitIdle(10, tok).catch(() => {});
+}
+
+// ---------- ввод ----------
+let hoverZone = null, overCat = false, downOnCat = false, holdTimer = null;
+function toBg(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * BW, y: (e.clientY - r.top) / r.height * BH }; }
+function hitCat(p) { const b = catBox(); const m = 10; return p.x > b.x + m && p.x < b.x + b.w - m && p.y > b.y + m && p.y < b.y + b.h; }
+cv.addEventListener("pointermove", (e) => {
+  lastInput = now(); saidIdle = false;
+  const p = toBg(e);
+  if (e.pointerType === "mouse") cursorPlay(p);
+  overCat = hitCat(p);
+  hoverZone = overCat ? null : zoneAt(p.x, p.y);
+  cv.classList.toggle("paw", overCat || !!hoverZone);
+  if (overCat && !petHintShown && !pet.on) {
+    const r = stage.getBoundingClientRect();
+    hintEl.style.display = "block"; hintEl.style.left = (e.clientX - r.left + 16) + "px"; hintEl.style.top = (e.clientY - r.top + 18) + "px";
+  } else if (now() > tipUntil) hintEl.style.display = "none";
+  if (pet.on && !overCat) petEnd();
+});
+cv.addEventListener("pointerleave", () => { hoverZone = null; overCat = false; if (now() > tipUntil) hintEl.style.display = "none"; petEnd(); });
+cv.addEventListener("pointerdown", (e) => {
+  lastInput = now();
+  if (cur && cur.waitClick) return;
+  const p = toBg(e);
+  if (hitCat(p) && !introRunning) { downOnCat = true; clearTimeout(holdTimer); holdTimer = setTimeout(() => { if (downOnCat) petStart(); }, 380); }
+});
+window.addEventListener("pointerup", () => {
+  if (!downOnCat) return; downOnCat = false; clearTimeout(holdTimer);
+  if (pet.on) petEnd(); else catClick();
+});
+// на телефоне нет «наведения мышкой»: после касания подсказываем, что Виски можно погладить, если подержать палец
+const TOUCH = document.documentElement.classList.contains("touch");
+let touchTipT = 0, touchTaps = 0, tipUntil = 0;
+function touchPetTip() {
+  if (!TOUCH || P.petTried || touchTaps++ % 3) return;
+  const s = stage.clientWidth / BW, b = catBox();
+  hintEl.textContent = "Подержи палец на Виски, чтобы погладить";
+  hintEl.style.display = "block";
+  const hw = hintEl.offsetWidth, hh = hintEl.offsetHeight;
+  // сбоку от Виски, на уровне живота: сверху у неё облачко с репликой, снизу край экрана
+  const right = (b.x + b.w) * s + 10, left = b.x * s - hw - 10;
+  const goLeft = right + hw > stage.clientWidth - 6 && left > 6;
+  hintEl.style.left = Math.max(6, goLeft ? left : Math.min(stage.clientWidth - hw - 6, right)) + "px";
+  hintEl.style.top = Math.max(6, Math.min(stage.clientHeight - hh - 6, (b.y + b.h * 0.55) * s - hh / 2)) + "px";
+  tipUntil = now() + 3200; clearTimeout(touchTipT); touchTipT = setTimeout(() => { hintEl.style.display = "none"; }, 3200);
+}
+function catClick() {
+  touchPetTip();
+  if (W.asleep) { say("pet.sleeping", { prio: 2 }); return; }
+  interrupt(); W.calmUntil = now() + 5000; W.face = W.x < BW / 2 ? 1 : -1; SFX.meow();
+  setAnim("talk", 3); say("idle.look", { prio: 2 }).then(() => { if (!pet.on && W.anim === "talk") setAnim("sit", 2.5); });
+  if (!W.onBed) sitIdle(10, tok).catch(() => {});
+  setAnim("talk", 3);
+}
+cv.addEventListener("click", (e) => {
+  if (cur && cur.waitClick) { cur.resolve(); return; }
+  const p = toBg(e);
+  if (hitCat(p)) return;
+  const z = zoneAt(p.x, p.y);
+  if (!z) { if (TOUCH && Math.hypot(p.x - W.x, p.y - (W.y - 90)) < 300) startPlay(p, true); return; }
+  if (z.k === "bowl") { bowlClick(); return; }
+  z.flash = now(); SFX.click();
+  if (z.k === "calendar") { openCal(); return; }
+  if (!W.onBed && !pet.on && !introRunning) { W.face = (z.x + z.w / 2) > W.x ? 1 : -1; }
+  say(objectKey(z.k), { prio: 2 });
+});
+
+// ---------- календарь ----------
+const calEl = document.getElementById("cal"), board = document.getElementById("board");
+let miniTimer = null;
+function miniSay(key) {
+  const b = board.querySelector(".mini .bubble"); if (!b) return;
+  b.textContent = line(key); b.classList.add("show");
+  clearTimeout(miniTimer); miniTimer = setTimeout(() => b.classList.remove("show"), 3800);
+}
+function renderCal() {
+  const env = (d) => {
+    const st = isDone(d) ? "done" : isOpen(d) ? "today" : "future";
+    const img = st === "done" ? "open" : st === "today" ? "today" : "closed";
+    const cd = st === "future" && unlockAt(d) !== Infinity ? `<span class="cdown">${leftText(d)}</span>` : "";
+    return `<button class="env ${st}" data-d="${d}"><img src="assets/env_${img}.png" alt=""><span class="date">${d} дек</span>${cd}</button>`;
+  };
+  board.innerHTML = `<button class="close" title="Закрыть">×</button>
+    <h2>Семь дней с Виски</h2>
+    <div class="envs">${[25, 26, 27, 28].map(env).join("")}<div class="row2">${[29, 30, 31].map(env).join("")}</div></div>
+    <div class="mini"><img src="assets/whisky_talk.png" alt=""><div class="bubble"></div></div>
+    ${window.allCardsCollected && window.allCardsCollected() ? `<button class="bonusbtn">★ Секретный бонус</button>` : ""}
+    <button class="svopen">Сохранение</button>
+    <button class="albopen">Альбом ${cardsGot().length}/7</button>`;
+  board.querySelector(".close").onclick = closeCal;
+  board.querySelector(".svopen").onclick = () => { SFX.click(); renderSave(); };
+  board.querySelector(".albopen").onclick = () => { SFX.paper(); renderAlbum(); };
+  const bb = board.querySelector(".bonusbtn");
+  if (bb) bb.onclick = () => { SFX.ding(); window.openBonus({ beforeShow: () => { calEl.classList.remove("open"); calOpen = false; } }); };
+  board.querySelectorAll(".env").forEach(b => b.onclick = () => {
+    const d = +b.dataset.d;
+    if (!isOpen(d)) { SFX.deny(); miniSay(unlockAt(d) === Infinity ? "calendar.order" : "calendar.future"); miniFace("puzzled", 2600); return; }
+    markOpened(d); SFX.paper();
+    miniSay(isDone(d) ? "calendar.done" : "calendar.today");
+    setTimeout(() => openDay(d), 700);
+  });
+  fitBoard();
+}
+// отсчёт на конверте обновляется сам; когда время вышло — конверт открывается
+setInterval(() => {
+  if (!calOpen || !board.querySelector(".envs")) return;
+  let changed = false;
+  board.querySelectorAll(".env.future").forEach(b => { const d = +b.dataset.d; if (isOpen(d)) changed = true; const c = b.querySelector(".cdown"); if (c) c.textContent = leftText(d); });
+  if (changed) { renderCal(); SFX.ding(); }
+}, 20000);
+
+// ---------- альбом карточек ----------
+const ALL = [25, 26, 27, 28, 29, 30, 31];
+const cardsGot = () => ALL.filter(d => P.days[d] && P.days[d].card);
+function renderAlbum() {
+  const got = new Set(cardsGot()), n = got.size;
+  const slot = (d) => got.has(d)
+    ? `<button class="aslot got" data-d="${d}">${window.renderCard(d, { flipped: true })}</button>`
+    : `<div class="aslot empty"><div class="aq">?</div><div class="ad">${d} дек</div></div>`;
+  const hint = n === 7 ? "Все семь! Секретный бонус открыт." : n === 0 ? "Пока пусто. Карточки появятся после игр." : `Собрано ${n} из 7. Говорят, за полный альбом что-то будет…`;
+  board.innerHTML = `<button class="close" title="Закрыть">×</button>
+    <h2>Альбом Виски</h2>
+    <div class="album">${ALL.slice(0, 4).map(slot).join("")}<div class="arow2">${ALL.slice(4).map(slot).join("")}</div></div>
+    <div class="ahint">${hint}</div>
+    <div class="abtns"><button class="btn alt" id="albback">◂ К календарю</button>${n === 7 && window.openBonus ? `<button class="btn main" id="albbonus">★ Секретный бонус</button>` : ""}</div>
+    <div class="abig"></div>`;
+  board.querySelector(".close").onclick = closeCal;
+  board.querySelector("#albback").onclick = () => { SFX.click(); renderCal(); };
+  const bb = board.querySelector("#albbonus");
+  if (bb) bb.onclick = () => { SFX.ding(); window.openBonus({ beforeShow: () => { calEl.classList.remove("open"); calOpen = false; } }); };
+  const big = board.querySelector(".abig");
+  board.querySelectorAll(".aslot.got").forEach(b => b.onclick = () => {
+    const d = +b.dataset.d; SFX.paper();
+    big.innerHTML = `<div class="abigin">${window.renderCard(d)}<button class="btn" id="abigx">◂ В альбом</button></div>`; big.classList.add("show");
+    const c = big.querySelector(".vcard"); setTimeout(() => { c.classList.add("flip"); SFX.ding(); }, 60);
+    const close = () => { big.classList.remove("show"); big.innerHTML = ""; };
+    big.querySelector("#abigx").onclick = (e) => { e.stopPropagation(); SFX.click(); close(); };
+    big.onclick = (e) => { if (e.target === big) close(); };
+  });
+  fitBoard();
+}
+
+// ---------- сохранение прогресса: код, который можно перенести на другое устройство ----------
+const b64u = (bytes) => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = (t) => { const s = atob(t.replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+const sum3 = (t) => { let h = 7; for (const ch of t) h = (h * 31 + ch.charCodeAt(0)) % 46656; return h.toString(36).padStart(3, "0"); };
+async function packP() {
+  let bytes = new TextEncoder().encode(JSON.stringify(P)), v = "1";
+  if (window.CompressionStream) { try { bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer()); v = "2"; } catch (e) {} }
+  const body = b64u(bytes); return `VISKI${v}-${body}-${sum3(body)}`;
+}
+async function unpackP(code) {
+  const m = String(code).replace(/\s+/g, "").match(/^VISKI([12])-([A-Za-z0-9_-]+)-([0-9a-z]{3})$/);
+  if (!m || sum3(m[2]) !== m[3]) throw new Error("bad");
+  let bytes = unb64u(m[2]);
+  if (m[1] === "2") bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+  const o = JSON.parse(new TextDecoder().decode(bytes));
+  if (!o || typeof o !== "object" || typeof o.days !== "object") throw new Error("bad");
+  return o;
+}
+async function renderSave() {
+  board.innerHTML = `<button class="close" title="Закрыть">×</button>
+    <h2>Сохранение</h2>
+    <div class="sv">
+      <p class="svtxt">Прогресс и так сохраняется сам, но только в этом браузере. Чтобы продолжить на другом устройстве или ничего не потерять, скопируй код и сохрани его.</p>
+      <textarea class="svcode" readonly></textarea>
+      <div class="svbtns"><button class="btn" id="svcopy">Скопировать код</button><button class="btn" id="svfile">Скачать файлом</button></div>
+      <p class="svtxt svsub">Есть код? Вставь его сюда, и прогресс вернётся.</p>
+      <textarea class="svin" placeholder="VISKI…" spellcheck="false"></textarea>
+      <div class="svbtns"><button class="btn" id="svload">Восстановить</button><button class="btn alt" id="svback">◂ К календарю</button></div>
+      <div class="svmsg"></div>
+      <button class="svreset" id="svreset">Сбросить прогресс и начать сначала</button>
+    </div>`;
+  board.querySelector(".close").onclick = closeCal;
+  board.querySelector("#svback").onclick = () => { SFX.click(); renderCal(); };
+  const out = board.querySelector(".svcode"), msg = board.querySelector(".svmsg"), inp = board.querySelector(".svin");
+  const say2 = (t, ok) => { msg.textContent = t; msg.className = "svmsg " + (ok ? "ok" : "bad"); };
+  const code = await packP(); out.value = code;
+  board.querySelector("#svcopy").onclick = async () => {
+    try { await navigator.clipboard.writeText(code); } catch (e) { out.focus(); out.select(); try { document.execCommand("copy"); } catch (e2) {} }
+    SFX.ding(); say2("Код скопирован. Сохрани его где-нибудь, например в заметках.", true);
+  };
+  board.querySelector("#svfile").onclick = async () => {
+    // в превью claude.ai — через его окно сохранения, на обычном сайте — обычная загрузка
+    const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+    if (dl) {
+      try { await dl.save({ filename: "viski-progress.txt", data: code }); SFX.ding(); say2("Файл с кодом сохранён.", true); }
+      catch (e) { say2("Файл не сохранён. Можно просто скопировать код.", false); }
+      return;
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([code], { type: "text/plain" }));
+    a.download = "viski-progress.txt"; document.body.appendChild(a); a.click(); a.remove(); SFX.ding(); say2("Файл с кодом скачан.", true);
+  };
+  // сброс: два нажатия, чтобы не стереть всё случайно
+  let resetSure = false, resetT = 0;
+  const rb = board.querySelector("#svreset");
+  rb.onclick = () => {
+    if (!resetSure) {
+      resetSure = true; rb.classList.add("sure"); rb.textContent = "Точно сбросить? Нажми ещё раз"; SFX.deny();
+      say2("Пропадут все пройденные дни, письма и карточки в альбоме. Код выше можно сохранить на всякий случай.", false);
+      clearTimeout(resetT); resetT = setTimeout(() => { if (!rb.isConnected) return; resetSure = false; rb.classList.remove("sure"); rb.textContent = "Сбросить прогресс и начать сначала"; }, 6000);
+      return;
+    }
+    clearTimeout(resetT); SFX.click(); window.__restart();
+  };
+  let sure = false;
+  board.querySelector("#svload").onclick = async () => {
+    let o; try { o = await unpackP(inp.value); } catch (e) { SFX.deny(); say2("Не получилось прочитать код. Проверь, что он скопирован целиком.", false); return; }
+    if (!sure) { sure = true; board.querySelector("#svload").textContent = "Точно? Нажми ещё раз"; say2("Прогресс на этом устройстве заменится прогрессом из кода.", false); return; }
+    P = Object.assign({ intro: false, calFound: false, days: {} }, o); save(); SFX.fanfare();
+    renderCal(); miniSay("calendar.restored");
+  };
+  fitBoard();
+}
+// телефон: календарь целиком на экране, без прокрутки — слегка уменьшаем доску, если не помещается
+function fitBoard() {
+  const b = calEl.querySelector(".board"); if (!b || !b.offsetHeight) return;
+  // никакой прокрутки: если доска не помещается — уменьшаем её целиком, по центру экрана
+  const k = Math.min(1, calEl.clientHeight * 0.95 / b.offsetHeight, calEl.clientWidth * 0.97 / b.offsetWidth);
+  b.style.scale = k < 0.995 ? k.toFixed(3) : "";
+}
+addEventListener("resize", () => calOpen && setTimeout(fitBoard, 150));
+{
+  // конверты и шрифты догружаются позже — пересчитываем, когда доска меняет размер
+  const bd = calEl.querySelector(".board");
+  if (bd && window.ResizeObserver) new ResizeObserver(() => calOpen && fitBoard()).observe(bd);
+  if (bd) bd.addEventListener("load", () => calOpen && fitBoard(), true);
+  if (document.fonts) document.fonts.ready.then(() => calOpen && fitBoard());
+}
+function openCal() {
+  calOpen = true; interrupt(); calEl.classList.add("open"); renderCal(); SFX.ding();
+  if (cur && !cur.waitClick) cur.resolve();
+  if (!P.calFound) { P.calFound = true; save(); setTimeout(() => miniSay("intro.calendar_found"), 350); }
+}
+function closeCal() {
+  calEl.classList.remove("open"); calOpen = false; resume(); SFX.click();
+  setTimeout(() => say("calendar.exit", { prio: 1 }), 250);
+}
+calEl.addEventListener("click", (e) => { if (e.target === calEl) closeCal(); });
+const GAMES = { 25: () => window.Game25, 26: () => window.Game26, 27: () => window.Game27, 28: () => window.Game28, 29: () => window.Game29, 30: () => window.Game30, 31: () => window.Game31 };
+function openDay(d) {
+  const G = GAMES[d] && GAMES[d]();
+  if (G) { G.open({ beforeShow: () => { calEl.classList.remove("open"); calOpen = false; } }); return; }
+  const info = DAYS.find(x => x.d === d);
+  board.innerHTML = `<button class="close" title="Закрыть">×</button>
+    <div class="day"><div class="tag">${d} декабря</div><h3>«${info.title}»</h3>
+    <p>Здесь будет мини-игра. Она появится на следующем этапе.</p><br>
+    <button class="btn" id="back">◂ К календарю</button>
+    ${TEST ? `<button class="btn alt" id="mark">${isDone(d) ? "Снять отметку" : "Отметить пройденным"} (тест)</button>` : ""}</div>`;
+  board.querySelector(".close").onclick = closeCal;
+  board.querySelector("#back").onclick = renderCal;
+  const m = board.querySelector("#mark");
+  if (m) m.onclick = () => { if (isDone(d)) delete P.days[d]; else P.days[d] = { game: true }; save(); renderCal(); };
+}
+
+// ---------- вступление ----------
+let calHintAt = Infinity;
+async function intro() {
+  introRunning = true; skipBtn.style.display = "block";
+  interrupt(); W.moveTo = null; W.v = 0; fade = {};
+  const my = tok;
+  try {
+    W.x = BED.x; W.y = BED.y; W.onBed = true; W.asleep = true; W.face = 1; setAnim("sleep", 1.2); W.ctx = "sleep";
+    await wait(2600, my);
+    setAnim("wake", 1, false); W.t0 = now(); await wait(1200, my);
+    W.t0 = now() - 1000; await wait(1300, my);
+    W.t0 = now() - 2000; await wait(1000, my);
+    W.asleep = false; setAnim("talk", 3);
+    await say("intro.wake", { prio: 3, waitClick: true });
+    if (my !== tok) throw CANCEL;
+    await jump(BED_EDGE + 40, FLOOR, my);
+    setAnim("talk", 3);
+    say("intro.explore", { prio: 2 });
+    await wait(2500, my);
+    finishIntro();
+  } catch (e) { if (e !== CANCEL) console.error(e); }
+}
+function finishIntro() {
+  introRunning = false; skipBtn.style.display = "none"; P.intro = true; save(); W.calmUntil = now() + 7000;
+  if (!P.calFound) calHintAt = now() + 60000;
+  resume(); life();
+}
+skipBtn.onclick = () => {
+  interrupt(); if (cur) cur.resolve(); SFX.click();
+  W.x = BED_EDGE + 60; W.y = FLOOR; W.onBed = false; W.asleep = false; W.face = 1; A.__force = null;
+  setAnim("talk", 3); say("intro.skip", { prio: 2 });
+  finishIntro();
+};
+
+// ---------- эффекты ----------
+const flakes = Array.from({ length: 150 }, () => ({ x: rnd(895, 1132), y: rnd(90, 510), v: rnd(18, 45), s: rnd(2, 4.5), p: rnd(0, 6) }));
+// снег за окном густеет с каждым пройденным днём: от лёгкого к настоящему новогоднему снегопаду
+const snowLevel = () => [25, 26, 27, 28, 29, 30, 31].filter(isDone).length;
+const bulbs = meta.bulbs.map(([x, y]) => ({ x, y, p: rnd(0, 6.28), sp: rnd(1.2, 2.6) }));
+const glow = document.createElement("canvas"); glow.width = glow.height = 64;
+{ const g = glow.getContext("2d"); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,220,140,0.9)"); gr.addColorStop(0.35, "rgba(255,190,90,0.35)"); gr.addColorStop(1, "rgba(255,170,60,0)");
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); }
+const twinkles = [];
+
+let last = now(), fade = {};
+const QUICK = new Set(["sitDown", "standUp", "lieDown", "lieUp", "turn", "turnBack", "jumpUp", "jumpDown", "swat"]);
+let calFrozenAt = 0;
+function draw() {
+  // комнату не видно под игрой, а под календарём она размыта: не тратим на неё силы телефона
+  if (window.__gameOpen || (calOpen && calFrozenAt && now() - calFrozenAt > 150)) { last = now(); requestAnimationFrame(draw); return; }
+  if (calOpen) { if (!calFrozenAt) calFrozenAt = now(); } else calFrozenAt = 0;
+  const t = now(), dt = Math.min(0.05, (t - last) / 1000); last = t;
+  // движение
+  if (W.moveTo !== null) {
+    const d = W.moveTo - W.x, ad = Math.abs(d);
+    const target = W.speed * Math.min(1, Math.max(0.3, ad / 110));       // тормозит у цели
+    W.v += (target - W.v) * Math.min(1, dt * 3.5);                       // плавный разгон
+    const st = W.v * dt;
+    if (ad <= st || ad < 1) { W.x = W.moveTo; W.moveTo = null; W.v = 0; } else W.x += Math.sign(d) * st;
+  }
+  W.phase += dt * W.fps * ((W.anim === "walk" || W.anim === "run") ? Math.max(0.35, W.v / (W.speed || 1)) : 1);
+  petTick(); randomTalk();
+  if (!busy() && P.intro && now() > calHintAt && !P.calFound) { calHintAt = Infinity; say("intro.calendar_hint", { prio: 2 }); }
+
+  ctx.drawImage(room, 0, 0);
+  drawScreens(t);
+  // снег
+  ctx.save(); ctx.beginPath(); ctx.rect(895, 90, 237, 420); ctx.clip();
+  ctx.fillStyle = "rgba(235,242,255,0.9)";
+  const sl = snowLevel(), nFl = 26 + sl * 17, wind = sl >= 5 ? (sl - 4) * 6 : 0, fast = 1 + sl * 0.06;
+  for (let fi = 0; fi < nFl; fi++) {
+    const f = flakes[fi];
+    f.y += f.v * fast * dt; f.x += Math.sin(t / 900 + f.p) * 0.25 + wind * dt;
+    if (f.x > 1134) f.x = 893;
+    if (f.y > 512) { f.y = 88; f.x = rnd(895, 1132); }
+    ctx.fillRect(Math.round(f.x), Math.round(f.y), f.s, f.s);
+  }
+  ctx.restore();
+  drawFireworks(t, dt);
+  // гирлянда и ёлка
+  ctx.globalCompositeOperation = "lighter";
+  for (const b of bulbs) { ctx.globalAlpha = 0.12 + 0.16 * (0.5 + 0.5 * Math.sin(t / 1000 * b.sp + b.p)); ctx.drawImage(glow, b.x - 22, b.y - 22, 44, 44); }
+  if (Math.random() < 0.25) twinkles.push({ x: rnd(1180, 1340), y: rnd(300, 600), t });
+  for (let i = twinkles.length - 1; i >= 0; i--) {
+    const k = (t - twinkles[i].t) / 900; if (k > 1) { twinkles.splice(i, 1); continue; }
+    const tw = twinkles[i]; const yy = (tw.y - 270) / 360; const half = 15 + yy * 95;
+    if (Math.abs(tw.x - 1262) > half) continue;
+    ctx.globalAlpha = Math.sin(Math.PI * k) * 0.55; ctx.drawImage(glow, tw.x - 12, tw.y - 12, 24, 24);
+  }
+  // подсветка доступных конвертов на стене
+  WALL_ENV.forEach(([x, y], i) => { const d = 25 + i; if (isOpen(d) && !isDone(d)) {
+    const hot = envPulse.d === d && t < envPulse.until;                // только что открылся — светится ярче
+    ctx.globalAlpha = hot ? 0.55 + 0.35 * Math.sin(t / 170) : 0.25 + 0.2 * Math.sin(t / 400);
+    if (hot) ctx.drawImage(glow, x - 26, y - 24, 108, 110); else ctx.drawImage(glow, x - 10, y - 8, 76, 78); } });
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+  drawWallHearts();
+
+  // подсветка предмета под курсором
+  const z = hoverZone;
+  if (z && !calOpen) {
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,225,160,0.07)";
+    ctx.fillRect(z.x, z.y, z.w, z.h); ctx.restore();
+    ctx.save(); ctx.strokeStyle = "rgba(255,226,160,0.75)"; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -t / 40;
+    ctx.strokeRect(z.x + 2, z.y + 2, z.w - 4, z.h - 4); ctx.restore();
+  }
+  for (const zz of ZONES) if (zz.flash && t - zz.flash < 450) {
+    ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = `rgba(255,230,170,${0.22 * (1 - (t - zz.flash) / 450)})`; ctx.fillRect(zz.x, zz.y, zz.w, zz.h); ctx.restore();
+  }
+
+  drawGifts(t);
+  drawBowl(t);
+  // Виски
+  let f = frame();
+  if (A.__force != null && W.anim.startsWith("jump")) f = A[W.anim][A.__force];
+  const s = SIZE;
+  if (f !== fade.last && (W.anim !== fade.lastAnim || !W.loop || W.anim === "tail" || W.anim === "eat")) fade = { ...fade, f: fade.last, x: fade.lx, y: fade.ly, face: fade.lface, t: t };
+  fade.last = f; fade.lastAnim = W.anim; fade.lx = W.x; fade.ly = W.y; fade.lface = W.face;
+  const fk = fade.f ? Math.min(1, (t - fade.t) / (QUICK.has(W.anim) ? 110 : 230)) : 1;
+  const BREATH = { sit: [0.012, 0.45], talk: [0.010, 0.45], lookup: [0.012, 0.45], loaf: [0.016, 0.3], sleep: [0.022, 0.25], love: [0.014, 0.5], happy: [0.012, 0.45], tail: [0.010, 0.6], alert: [0.008, 0.5], angry: [0.010, 0.6], shy: [0.012, 0.4], sad: [0.010, 0.35], puzzled: [0.008, 0.5] }[W.anim];
+  const br = BREATH ? BREATH[0] * Math.sin(t / 1000 * Math.PI * 2 * BREATH[1]) : 0;
+  ctx.save(); ctx.translate(W.x, W.y); ctx.scale(W.face * s * (1 - br * 0.4), s * (1 + br));
+  // тень
+  if (!W.onBed || true) { ctx.fillStyle = "rgba(20,10,10,0.22)"; ctx.beginPath(); ctx.ellipse(0, -2, f.w * 0.36, 9, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.drawImage(atlas, f.x, f.y, f.w, f.h, -f.ax, -f.ay, f.w, f.h);
+  const ca = crownImg && hasCrown() && crownAt[f.x + "," + f.y];
+  if (ca) {                                    // корона сидит между ушами и качается вместе с Виски
+    const cw = ca[2], ch = cw * crownImg.height / crownImg.width;
+    ctx.save(); ctx.translate(ca[0], ca[1]); ctx.rotate(ca[3]); ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(crownImg, -cw / 2, -ch * 0.85, cw, ch); ctx.restore();
+  }
+  ctx.restore();
+  if (fade.f && fk < 1) {   // плавная смена позы: старый кадр тает поверх нового
+    ctx.save(); ctx.globalAlpha = (1 - fk) * 0.9; ctx.translate(fade.x, fade.y); ctx.scale(fade.face * s, s);
+    ctx.drawImage(atlas, fade.f.x, fade.f.y, fade.f.w, fade.f.h, -fade.f.ax, -fade.f.ay, fade.f.w, fade.f.h); ctx.restore();
+  }
+  drawPuffs(t);
+  // zZ
+  if (W.asleep && W.anim === "sleep") {
+    ctx.font = "15px 'Press Start 2P', monospace"; ctx.fillStyle = "rgba(255,248,230,0.85)";
+    for (let i = 0; i < 2; i++) { const k = ((t / 1600) + i * 0.5) % 1; ctx.globalAlpha = Math.sin(Math.PI * k); ctx.fillText("z", W.x + 50 * W.face + k * 30, W.y - 110 - k * 50); }
+    ctx.globalAlpha = 1;
+  }
+  // сердечки
+  ctx.font = "26px Rubik, sans-serif"; ctx.fillStyle = "#ff5a7a";
+  for (let i = pet.hearts.length - 1; i >= 0; i--) {
+    const h = pet.hearts[i], k = (t - h.t) / 1100; if (k > 1) { pet.hearts.splice(i, 1); continue; }
+    ctx.globalAlpha = 1 - k; ctx.fillText("♥", h.x, h.y - k * 60);
+  }
+  ctx.globalAlpha = 1;
+  placeBubble();
+  requestAnimationFrame(draw);
+}
+
+// ---------- миска Виски ----------
+const BOWL = { x: 1852, y: 780, s: 0.8 }, EAT_X = 1712;      // миска у двери, Виски садится слева от неё
+let bowlImg = null, bowlM = null, bowlPop = 0, eatUntil = 0, nextCrunch = 0;
+Promise.all([load("assets/game26.webp"), fetch("assets/game26.json").then(r => r.json())]).then(([i, j]) => { bowlImg = i; bowlM = j; }).catch(() => {});
+const bowlFull = () => P.bowlFull !== false;
+function bowlBox() {
+  if (!bowlM) return null; const m = bowlM.bowlFull, w = m[2] * BOWL.s, h = m[3] * BOWL.s;
+  return { k: "bowl", x: BOWL.x - w / 2 - 8, y: BOWL.y - h - 8, w: w + 16, h: h + 14 };
+}
+function drawBowl(t) {
+  if (!bowlImg) return;
+  const m = bowlM[bowlFull() ? "bowlFull" : "bowlEmpty"], w = m[2] * BOWL.s, h = m[3] * BOWL.s;
+  const k = bowlPop ? Math.min(1, (t - bowlPop) / 520) : 1, sq = k < 1 ? Math.sin(k * Math.PI) * 0.14 : 0;
+  ctx.save(); ctx.fillStyle = "rgba(20,10,10,0.26)"; ctx.beginPath(); ctx.ellipse(BOWL.x, BOWL.y - 3, w * 0.47, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.translate(BOWL.x, BOWL.y); ctx.scale(1 + sq, 1 - sq * 0.6);
+  ctx.drawImage(bowlImg, m[0], m[1], m[2], m[3], -w / 2, -h, w, h); ctx.restore();
+  if (eatUntil && t < eatUntil && t > nextCrunch) {                  // хрум-хрум: крошки корма и надпись
+    nextCrunch = t + rnd(560, 820); SFX.crunch();
+    puff("хрум", BOWL.x + 18 + rnd(-8, 12), BOWL.y - h - 26);
+    for (let i = 0; i < 3; i++) crumbs.push({ x: BOWL.x + rnd(-16, 16), y: BOWL.y - h * 0.62, vx: rnd(-70, 70), vy: rnd(-190, -120), t });
+  }
+}
+async function eatAtBowl(my, run) {
+  await walkTo(EAT_X, my, run); W.face = 1;
+  if (!bowlFull()) {                                          // миска пустая: сидит рядом и намекает
+    W.ctx = "food"; setAnim("sit", 2.5); if (Math.random() < 0.5) say("object.bowl", { prio: 0 });
+    await sitIdle(rnd(4500, 7000), my, "food"); return;
+  }
+  W.ctx = "food"; setAnim("eat", 2.4); eatUntil = now() + rnd(4800, 6500); nextCrunch = now() + 250;
+  try { await wait(eatUntil - now(), my); } finally { eatUntil = 0; }
+  P.bowlFull = false; save();
+  setAnim("happy", 1); await wait(1400, my); await sitIdle(1600, my);
+}
+function bowlClick() {
+  if (bowlFull()) { SFX.pop(); const k = objectKey("bowl"); say(k === "object.bowl" ? "bowl.full" : k, { prio: 2 }); return; }
+  P.bowlFull = true; save(); bowlPop = now(); SFX.crunch(); setTimeout(() => SFX.crunch(), 140); setTimeout(() => SFX.crunch(), 300);
+  for (let i = 0; i < 9; i++) crumbs.push({ x: BOWL.x + rnd(-22, 22), y: BOWL.y - 120 - rnd(0, 50), vx: rnd(-15, 15), vy: rnd(40, 120), t: now(), fall: BOWL.y - 34 });
+  if (introRunning || pet.on || calOpen || W.asleep || W.onBed) return;
+  interrupt(); const my = tok; W.calmUntil = now() + 20000;
+  if (has("bowl.refill")) say("bowl.refill", { prio: 2 });
+  eatAtBowl(my, true).catch(() => {}).finally(() => { W.calmUntil = now() + 1500; });
+}
+
+// ---------- надписи-облачка («хрум», «нюх») и крошки ----------
+const puffs = [], crumbs = [];
+function puff(text, x, y) { puffs.push({ text, x, y, t: now() }); }
+function drawPuffs(t) {
+  ctx.save(); ctx.font = "12px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+  for (let i = puffs.length - 1; i >= 0; i--) {
+    const p = puffs[i], k = (t - p.t) / 1100; if (k > 1) { puffs.splice(i, 1); continue; }
+    ctx.globalAlpha = Math.sin(Math.PI * Math.min(1, k * 1.4)) * 0.95;
+    ctx.lineWidth = 4; ctx.strokeStyle = "rgba(43,29,20,.85)"; ctx.strokeText(p.text, p.x, p.y - k * 34);
+    ctx.fillStyle = "#fff4dc"; ctx.fillText(p.text, p.x, p.y - k * 34);
+  }
+  ctx.globalAlpha = 1;
+  for (let i = crumbs.length - 1; i >= 0; i--) {
+    const c = crumbs[i], k = (t - c.t) / 1000; if (k > 1) { crumbs.splice(i, 1); continue; }
+    const y = c.y + c.vy * k + 420 * k * k, x = c.x + c.vx * k;
+    if (c.fall && y > c.fall) { crumbs.splice(i, 1); continue; }
+    if (!c.fall && y > BOWL.y - 4) { crumbs.splice(i, 1); continue; }
+    ctx.fillStyle = "#3a1e0c"; ctx.fillRect(Math.round(x) - 3, Math.round(y) - 3, 6, 6);
+    ctx.fillStyle = "#c56a22"; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4);
+  }
+  ctx.restore();
+}
+
+// ---------- подарки: искорки и любопытный нос ----------
+let glint = null, nextGlint = 0;
+const shownGifts = () => GIFT_DAYS.filter(d => giftFound(d) && P.days[d].giftAt);
+const floorGifts = () => shownGifts().filter(d => GIFT_AT[d][1] > 650);
+function drawGlint(t) {
+  if (!glint && t > nextGlint) {
+    const list = shownGifts(); nextGlint = t + rnd(2600, 5200);
+    if (list.length) { const b = giftBox(pick(list)); if (b) glint = { x: b.x + rnd(0.2, 0.8) * b.w, y: b.y + rnd(0.1, 0.5) * b.h, t }; }
+  }
+  if (!glint) return;
+  const k = (t - glint.t) / 650; if (k > 1) { glint = null; return; }
+  const a = Math.sin(Math.PI * k), L = 4 + 9 * a;
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = a; ctx.fillStyle = "#fff6d6";
+  ctx.fillRect(glint.x - L, glint.y - 1, L * 2, 2); ctx.fillRect(glint.x - 1, glint.y - L, 2, L * 2);
+  ctx.globalAlpha = a * 0.6; ctx.drawImage(glow, glint.x - 10, glint.y - 10, 20, 20); ctx.restore();
+}
+async function sniffGifts(my) {
+  const d = pick(floorGifts()), gx = GIFT_AT[d][0];
+  await walkTo(gx + (W.x < gx ? -70 : 70), my); W.face = gx > W.x ? 1 : -1;
+  setAnim("lookup", 1); W.ctx = "tree";
+  for (let i = 0; i < 3; i++) { puff("нюх", W.x + W.face * 70, W.y - 150); await wait(900, my); }
+  await sitIdle(rnd(2500, 4000), my);
+}
+
+// ---------- игра с курсором / пальцем ----------
+const play = { pts: [], cool: 0, on: false, last: null };
+function cursorPlay(p) {
+  const t = now(), cx = W.x, cy = W.y - 90;
+  play.last = p; play.pts.push({ x: p.x, y: p.y, t });
+  while (play.pts.length && t - play.pts[0].t > 1000) play.pts.shift();
+  const d = Math.hypot(p.x - cx, p.y - cy);
+  if (play.on || t < play.cool || d > 270 || d < 80) return;
+  let path = 0;
+  for (let i = 1; i < play.pts.length; i++) { const a = play.pts[i - 1], b = play.pts[i]; if (Math.hypot(b.x - cx, b.y - cy) < 290) path += Math.hypot(b.x - a.x, b.y - a.y); }
+  if (path > 420) startPlay(p, false);
+}
+async function startPlay(p, tap) {
+  if (play.on || now() < play.cool || busy() || W.asleep || W.onBed || (cur && cur.prio >= 2)) return;
+  if (["loaf", "sleep", "lieDown", "lieUp", "jumpUp", "jumpDown", "eat", "stretch"].includes(W.anim)) return;
+  play.on = true; play.last = p; interrupt(); const my = tok; W.calmUntil = now() + 6000;
+  try {
+    W.face = p.x > W.x ? 1 : -1; setAnim("alert", 1);
+    if (Math.random() < 0.35 && has("play.watch")) say("play.watch", { prio: 1 });
+    await wait(tap ? 380 : 650, my);
+    W.face = (play.last || p).x > W.x ? 1 : -1;
+    SFX.whoosh(); setAnim("swat", 9, false); await wait(470, my);
+    if (Math.random() < 0.4 && has("play.swat")) say("play.swat", { prio: 1 });
+    await wait(420, my); setAnim("sit", 2.5);
+  } catch (e) {} finally { play.on = false; play.cool = now() + (tap ? 2500 : 6000); W.calmUntil = now() + 2500; }
+}
+
+// ---------- сердечки на настенном календаре: пройденные дни ----------
+const HEART = ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"];
+function drawWallHearts() {
+  WALL_ENV.forEach(([x, y], i) => {
+    if (!isDone(25 + i)) return;
+    const s = 2.1, ox = x + 41, oy = y + 44;
+    ctx.fillStyle = "#4a0f18";
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) HEART.forEach((row, r) => [...row].forEach((c, q) => { if (c === "1") ctx.fillRect(ox + q * s + dx * s, oy + r * s + dy * s, s + 0.5, s + 0.5); }));
+    HEART.forEach((row, r) => [...row].forEach((c, q) => { if (c === "1") { ctx.fillStyle = (r === 1 && q === 1) ? "#ff9aa8" : "#e0384c"; ctx.fillRect(ox + q * s, oy + r * s, s + 0.5, s + 0.5); } }));
+  });
+}
+
+// ---------- новый конверт открылся, пока Марсель в комнате ----------
+const announced = {}; let envPulse = { d: 0, until: 0 };
+setInterval(() => {
+  if (introRunning || !P.intro) return;
+  const roomFree = !calOpen && !window.__gameOpen && !pet.on;
+  if (roomFree && P.days[31] && P.days[31].finaleSeen && !P.saveReminded && has("save.reminder") && !cur) {   // после финала — про код
+    P.saveReminded = true; save(); say("save.reminder", { prio: 1, dur: 7000 }); return;
+  }
+  if (!P.calFound || TEST || !roomFree) return;
+  for (const d of [26, 27, 28, 29, 30, 31]) {
+    if (isDone(d) || openedAt(d) || announced[d] || !isOpen(d)) continue;
+    announced[d] = true; envPulse = { d, until: now() + 16000 }; SFX.jingle();
+    if (has("calendar.new")) say("calendar.new", { prio: 2 });
+    break;
+  }
+}, 4000);
+
+// ---------- живые экраны: звёзды на телевизоре и мониторах, бегущая подсветка вентиляторов ----------
+const SCREENS = [[545, 405, 215, 60], [1354, 397, 87, 24], [1453, 397, 87, 24], [1643, 397, 87, 24]];
+const stars = [];
+let ringSrc = null, ringTmp = null;
+try {
+  const c = document.createElement("canvas"); c.width = 52; c.height = 110; const g = c.getContext("2d");
+  g.drawImage(room, 1770, 385, 52, 110, 0, 0, 52, 110);
+  const d = g.getImageData(0, 0, 52, 110), p = d.data;
+  for (let i = 0; i < p.length; i += 4) { const mx = Math.max(p[i], p[i + 1], p[i + 2]), mn = Math.min(p[i], p[i + 1], p[i + 2]); if (!(mx - mn > 60 && mx > 100)) p[i + 3] = 0; }
+  g.putImageData(d, 0, 0); ringSrc = c; ringTmp = document.createElement("canvas"); ringTmp.width = 52; ringTmp.height = 110;
+} catch (e) { ringSrc = null; }
+function drawScreens(t) {
+  if (Math.random() < 0.06) { const s = pick(SCREENS); stars.push({ x: s[0] + Math.random() * s[2], y: s[1] + Math.random() * s[3], t }); }
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  for (let i = stars.length - 1; i >= 0; i--) {
+    const st = stars[i], k = (t - st.t) / 1200; if (k > 1) { stars.splice(i, 1); continue; }
+    const a = Math.sin(Math.PI * k); ctx.globalAlpha = a * 0.9; ctx.fillStyle = "#eef4ff";
+    ctx.fillRect(st.x - 1, st.y, 3, 1); ctx.fillRect(st.x, st.y - 1, 1, 3);
+  }
+  ctx.restore();
+  if (ringSrc) {                                    // подсветка кулеров медленно переливается
+    const g = ringTmp.getContext("2d");
+    g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, 52, 110); g.drawImage(ringSrc, 0, 0);
+    const h0 = (t / 60) % 360, gr = g.createLinearGradient(0, 0, 0, 110);
+    for (let i = 0; i <= 4; i++) gr.addColorStop(i / 4, `hsl(${(h0 + i * 70) % 360},100%,50%)`);
+    g.globalCompositeOperation = "hue"; g.fillStyle = gr; g.fillRect(0, 0, 52, 110);
+    g.globalCompositeOperation = "destination-in"; g.drawImage(ringSrc, 0, 0);
+    ctx.drawImage(ringTmp, 1770, 385);
+  }
+  drawGlint(t);
+}
+
+// ---------- салют за окном: в новогоднюю ночь и январскими вечерами ----------
+const WIN = { x: 895, y: 90, w: 238, h: 421 };
+const fw = { parts: [], next: 0, vol: 0, flash: null, cv: null, mask: null, said: false };
+try {
+  const c = document.createElement("canvas"); c.width = WIN.w; c.height = WIN.h; const g = c.getContext("2d");
+  g.drawImage(room, WIN.x, WIN.y, WIN.w, WIN.h, 0, 0, WIN.w, WIN.h);
+  const d = g.getImageData(0, 0, WIN.w, WIN.h), p = d.data, m = new Uint8Array(WIN.w * WIN.h);
+  for (let y = 0; y < 188; y++) for (let x = 0; x < WIN.w; x++) {   // только небо в верхних стёклах: без рамы, лампы и домов
+    const i = (y * WIN.w + x) * 4, r = p[i], gg = p[i + 1], b = p[i + 2];
+    if ((b > 36 && b > r + 16 && !(r > 150 && gg > 150 && b < 170)) || (r > 185 && gg > 185 && b > 185)) m[y * WIN.w + x] = 1;
+  }
+  const smooth = (src, th) => {                                       // убираем дырки и одиночные точки
+    const out = new Uint8Array(src.length);
+    for (let y = 0; y < WIN.h; y++) for (let x = 0; x < WIN.w; x++) {
+      let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const yy = y + dy, xx = x + dx; if (yy >= 0 && yy < WIN.h && xx >= 0 && xx < WIN.w) n += src[yy * WIN.w + xx]; }
+      out[y * WIN.w + x] = n >= th ? 1 : 0;
+    }
+    return out;
+  };
+  const mm = smooth(smooth(m, 4), 5);
+  for (let i = 0; i < mm.length; i++) { const j = i * 4; p[j] = p[j + 1] = p[j + 2] = 255; p[j + 3] = mm[i] ? 255 : 0; }
+  g.putImageData(d, 0, 0); fw.mask = c; fw.cv = document.createElement("canvas"); fw.cv.width = WIN.w; fw.cv.height = WIN.h;
+} catch (e) { fw.mask = null; }
+function fwMode() {
+  if (window.__fwTest && now() < window.__fwTest) return "mid";
+  const d = new Date(), mo = d.getMonth(), day = d.getDate(), h = d.getHours();
+  if (mo === 0 && day === 1 && h < 1) return "mid";                      // первый час нового года
+  if (mo === 0 && day <= 8 && (h >= 18 || h < 6)) return "jan";          // январские вечера
+  return null;
+}
+function fwBurst(x, y) {
+  const hue = pick([0, 28, 48, 120, 190, 275, 320]), n = 48 + Math.floor(Math.random() * 20), sp = rnd(58, 88);
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2 + Math.random() * 0.25, v = sp * (0.65 + Math.random() * 0.45);
+    fw.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: now(), life: rnd(1000, 1700), c: `hsl(${hue + rnd(-14, 14)},100%,${Math.round(rnd(62, 78))}%)` });
+  }
+  fw.flash = { x, y, t: now(), hue }; SFX.firework();
+}
+function drawFireworks(t, dt) {
+  if (!fw.mask) return;
+  const mode = fwMode();
+  if (mode && t > fw.next) {
+    fw.parts.push({ rocket: true, x: rnd(22, WIN.w - 22), y0: 196, ty: rnd(28, 120), vx: rnd(-14, 14), t, life: rnd(480, 650) });
+    if (mode === "mid") fw.next = t + rnd(450, 1300);
+    else { if (fw.vol <= 0) fw.vol = 2 + Math.floor(Math.random() * 3); fw.vol--; fw.next = t + (fw.vol > 0 ? rnd(350, 750) : rnd(20000, 45000)); }
+    if (mode === "mid" && !window.__fwTest && !fw.said) {                // полночь: Виски идёт к окну
+      fw.said = true;
+      const yr = new Date().getFullYear();
+      if (P.nySaid !== yr) { P.nySaid = yr; save(); if (has("newyear.midnight")) setTimeout(() => say("newyear.midnight", { prio: 2 }), 1600);
+        if (!busy() && !W.asleep && !W.onBed) { interrupt(); const my = tok; W.calmUntil = now() + 15000; walkTo(1010, my).then(() => { W.face = 1; setAnim("lookup", 1); W.ctx = "window"; }).catch(() => {}); } }
+    }
+  }
+  if (!fw.parts.length && !fw.flash) return;
+  const g = fw.cv.getContext("2d");
+  g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.clearRect(0, 0, WIN.w, WIN.h);
+  if (fw.flash) {
+    const k = (t - fw.flash.t) / 520;
+    if (k > 1) fw.flash = null;
+    else { const gr = g.createRadialGradient(fw.flash.x, fw.flash.y, 0, fw.flash.x, fw.flash.y, 150);
+      gr.addColorStop(0, `hsla(${fw.flash.hue},100%,72%,${(0.4 * (1 - k)).toFixed(3)})`); gr.addColorStop(1, "hsla(0,0%,0%,0)"); g.fillStyle = gr; g.fillRect(0, 0, WIN.w, WIN.h); }
+  }
+  for (let i = fw.parts.length - 1; i >= 0; i--) {
+    const p = fw.parts[i], k = (t - p.t) / p.life;
+    if (p.rocket) {
+      const kk = Math.min(1, k), x = p.x + p.vx * kk, y = p.y0 + (p.ty - p.y0) * (1 - (1 - kk) * (1 - kk));
+      g.fillStyle = "#ffe8b8"; g.globalAlpha = 0.9; g.fillRect(Math.round(x), Math.round(y), 2, 3);
+      g.globalAlpha = 0.35; g.fillRect(Math.round(x), Math.round(y) + 4, 1, 6);
+      if (k >= 1) { fw.parts.splice(i, 1); fwBurst(x, p.ty); }
+      continue;
+    }
+    if (k >= 1) { fw.parts.splice(i, 1); continue; }
+    p.vy += 24 * dt; p.vx *= 1 - 1.3 * dt; p.vy *= 1 - 1.3 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    g.globalAlpha = Math.max(0, (1 - k * k) * (k > 0.7 && Math.random() < 0.3 ? 0.3 : 1)); g.fillStyle = p.c;
+    const ps = k < 0.45 ? 3 : 2; g.fillRect(Math.round(p.x), Math.round(p.y), ps, ps);
+    if (k < 0.35) { g.globalAlpha *= 0.45; g.fillRect(Math.round(p.x - p.vx * 0.05), Math.round(p.y - p.vy * 0.05), 2, 2); }   // короткий хвостик
+  }
+  g.globalAlpha = 1; g.globalCompositeOperation = "destination-in"; g.drawImage(fw.mask, 0, 0);
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.drawImage(fw.cv, WIN.x, WIN.y); ctx.restore();
+}
+
+// ---------- мини-Виски в календаре: озадаченная мордочка у закрытого конверта ----------
+const miniFaces = {};
+for (const k of ["puzzled"]) {
+  try { const f = A[k][0], c = document.createElement("canvas"); c.width = 180; c.height = 213; const g = c.getContext("2d");
+    g.drawImage(atlas, f.x, f.y, f.w, f.h, (180 - f.w) / 2, 213 - f.h, f.w, f.h); miniFaces[k] = c.toDataURL(); } catch (e) {}
+}
+let miniFaceT = 0;
+function miniFace(k, ms) {
+  const im = board.querySelector(".mini img"); if (!im || !miniFaces[k]) return;
+  im.src = miniFaces[k]; clearTimeout(miniFaceT);
+  miniFaceT = setTimeout(() => { if (im.isConnected) im.src = "assets/whisky_talk.png"; }, ms);
+}
+
+// ---------- размер ----------
+function fit() {
+  const k = Math.min(innerWidth / BW, innerHeight / BH);
+  stage.style.width = BW * k + "px"; stage.style.height = BH * k + "px";
+  stage.style.setProperty("--u", Math.max(0.55, k));
+}
+addEventListener("resize", fit); fit();
+
+// ---------- связь с мини-играми ----------
+// плавное затемнение между сценами: темнеет → меняем сцену под шторкой → светлеет
+const veil = document.getElementById("veil");
+let veilBusy = false;
+window.fadeVeil = (fn) => {
+  if (veilBusy) return Promise.resolve();
+  veilBusy = true;
+  return new Promise((res) => {
+    veil.style.pointerEvents = "auto"; veil.style.opacity = 1;
+    setTimeout(async () => {
+      const ldT = setTimeout(() => veil.classList.add("loading"), 250);
+      try { await fn(); } catch (e) { console.error(e); }
+      clearTimeout(ldT); veil.classList.remove("loading");
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        veil.style.opacity = 0;
+        setTimeout(() => { veil.style.pointerEvents = "none"; veilBusy = false; res(); }, 420);
+      }));
+    }, 400);
+  });
+};
+
+if (DEV) { window.__openDay = openDay; window.__openCal = openCal; }
+window.VISKI = {
+  atlas, A, line, save, getP: () => P,
+  backToRoom(key) {
+    resume();
+    if (key === "game.quit" && !W.asleep && !W.onBed) {         // ушёл посреди игры: Виски немного грустит
+      interrupt(); setAnim("sad", 1); W.calmUntil = now() + 4800;
+      setTimeout(() => { if (W.anim === "sad") setAnim("sit", 2.5); }, 3800);
+    }
+    if (key) setTimeout(() => say(key, { prio: 2 }), 300);
+  },
+  has: (k) => has(k),
+};
+
+// ---------- начать сначала (без перезагрузки) ----------
+window.__restart = () => {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  P = { intro: false, calFound: false, days: {} };
+  calEl.classList.remove("open"); calOpen = false; pet.on = false;
+  introRunning = true; interrupt(); W.moveTo = null; W.v = 0; if (cur) cur.resolve(); calHintAt = Infinity;
+  stage.classList.remove("on"); setTimeout(() => { stage.classList.add("on"); intro(); }, 600);
+};
+addEventListener("hashchange", () => { if (location.hash === "#sbros") window.__restart(); });
+
+// ---------- старт ----------
+document.getElementById("boot").classList.add("done");
+setTimeout(() => document.getElementById("boot").remove(), 700);
+setTimeout(() => {                       // заранее подгружаем картинки игр и карточек, чтобы всё открывалось сразу
+  const imgs = ["game25_bg.webp", "game25.webp", "game26.webp", "game27.webp", "game28_bg.webp", "game28_items.webp", "game28_food.webp",
+    "game29.webp", "game30.webp", "game31.webp", "game28_cat.webp", "card25.webp", "card26.webp", "card27.webp", "card28.webp", "card29.webp", "card30.webp", "card31.webp", "whisky_talk.png"];
+  const jsons = ["game25.json", "game26.json", "game27.json", "game28_items.json", "game28_food.json", "game29.json", "game30.json", "game31.json"];
+  window.__pre = imgs.map(f => { const i = new Image(); i.src = "assets/" + f; return i; });
+  jsons.forEach(f => fetch("assets/" + f).catch(() => {}));
+}, 1200);
+// запасная копия сайта в браузере (только на настоящем сайте, не в превью)
+if ("serviceWorker" in navigator && window.top === window && (location.protocol === "https:" || location.hostname === "localhost")) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  if (document.readyState === "complete") navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+requestAnimationFrame(() => stage.classList.add("on"));
+requestAnimationFrame(draw);
+if (!P.intro) intro();
+else { W.x = rnd(600, 1400); W.y = FLOOR; W.onBed = false; W.asleep = false; setAnim("sit", 2.5); if (!P.calFound) calHintAt = now() + 60000; life(); }
+})();
+</script>
+</body>
+</html>
