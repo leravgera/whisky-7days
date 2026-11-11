@@ -44,6 +44,8 @@
     border: calc(9px * var(--u)) solid transparent; border-top-color: #2b1d14; border-bottom: 0; }
   .bubble .more { display: block; text-align: right; font-size: .7em; opacity: .55; margin-top: 4px; animation: blink 1s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .15; } }
+  #skip.nudge { animation: nudge .7s ease-out; }
+  @keyframes nudge { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.14); filter: brightness(1.35); } 60% { transform: scale(.97); } }
 
   #skip { position: absolute; right: 1.2%; bottom: 2%; z-index: 6; font: inherit; font-size: max(12px, calc(16px * var(--u)));
     background: rgba(20,16,30,.65); color: #f4e6cf; border: 2px solid rgba(244,230,207,.4); border-radius: 8px; padding: .4em .9em; cursor: pointer; display: none; }
@@ -506,7 +508,7 @@ cv.addEventListener("pointermove", (e) => {
   const p = toBg(e);
   if (e.pointerType === "mouse") cursorPlay(p);
   overCat = hitCat(p);
-  hoverZone = overCat ? null : zoneAt(p.x, p.y);
+  hoverZone = overCat || introRunning ? null : zoneAt(p.x, p.y);
   cv.classList.toggle("paw", overCat || !!hoverZone);
   if (overCat && !petHintShown && !pet.on) {
     const r = stage.getBoundingClientRect();
@@ -551,6 +553,7 @@ function catClick() {
 }
 cv.addEventListener("click", (e) => {
   if (cur && cur.waitClick) { cur.resolve(); return; }
+  if (introRunning) { nudgeSkip(); return; }     // пока Виски просыпается и говорит первые фразы, предметы не трогаем
   const p = toBg(e);
   if (hitCat(p)) return;
   const z = zoneAt(p.x, p.y);
@@ -786,6 +789,7 @@ function endIntroNow() {
   setAnim("sit", 2.5); W.ctx = null;
   finishIntro();
 }
+function nudgeSkip() { skipBtn.classList.remove("nudge"); void skipBtn.offsetWidth; skipBtn.classList.add("nudge"); }
 skipBtn.onclick = () => {
   interrupt(); if (cur) cur.resolve(); SFX.click();
   W.x = BED_EDGE + 60; W.y = FLOOR; W.onBed = false; W.asleep = false; W.face = 1; A.__force = null;
