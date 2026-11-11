@@ -378,6 +378,7 @@ async function life() {
       else if (r < 0.76) { await walkTo(1105, my); W.face = 1; W.ctx = "tree"; SFX.whoosh(); setAnim("swat", 7, false); await wait(900, my); await sitIdle(800, my); setAnim("swat", 7, false); await wait(900, my); await sitIdle(1500, my); }
       else if (r < 0.82) { await walkTo(rnd(500, 1700), my, true); await sitIdle(rnd(5000, 8000), my); }
       else if (r < 0.88) { await getUp(my); setAnim("stretch", 1.2, false); W.ctx = "stretch"; await wait(2600, my); await playOnce("sitDown", 7, my); await sitIdle(4000, my); }
+      else if (now() < (W.noNapUntil || 0)) { await sitIdle(rnd(5000, 9000), my); }   // только что проснулась: пару минут не засыпает снова
       else if (r < 0.94) { await playOnce("lieDown", 6, my); setAnim("sleep", 1.2); W.asleep = true; W.ctx = "sleep"; await wait(rnd(9000, 15000), my); await wakeUp(my, false); }
       else { await walkTo(BED_EDGE, my); await jump(BED.x, BED.y, my); setAnim("sleep", 1.2); W.asleep = true; W.ctx = "sleep"; await wait(rnd(14000, 22000), my); await wakeUp(my, false); }
     } catch (e) { if (e !== CANCEL) console.error(e); await sleepMs(100); }
@@ -724,6 +725,7 @@ addEventListener("resize", () => calOpen && setTimeout(fitBoard, 150));
   if (document.fonts) document.fonts.ready.then(() => calOpen && fitBoard());
 }
 function openCal() {
+  if (introRunning) endIntroNow();          // открыли календарь, не дождавшись конца вступления: Виски просыпается сразу
   calOpen = true; interrupt(); calEl.classList.add("open"); renderCal(); SFX.ding();
   if (cur && !cur.waitClick) cur.resolve();
   if (!P.calFound) { P.calFound = true; save(); setTimeout(() => miniSay("intro.calendar_found"), 350); }
@@ -772,9 +774,17 @@ async function intro() {
   } catch (e) { if (e !== CANCEL) console.error(e); }
 }
 function finishIntro() {
-  introRunning = false; skipBtn.style.display = "none"; P.intro = true; save(); W.calmUntil = now() + 7000;
+  introRunning = false; skipBtn.style.display = "none"; P.intro = true; save(); W.calmUntil = now() + 7000; W.noNapUntil = now() + 120000;
   if (!P.calFound) calHintAt = now() + 60000;
   resume(); life();
+}
+// вступление прервали (например, открыли календарь): без него Виски так и осталась бы спать на кровати
+function endIntroNow() {
+  if (!introRunning) return;
+  interrupt(); if (cur) cur.resolve();
+  W.moveTo = null; W.v = 0; W.x = BED_EDGE + 60; W.y = FLOOR; W.onBed = false; W.asleep = false; W.face = 1; A.__force = null; fade = {};
+  setAnim("sit", 2.5); W.ctx = null;
+  finishIntro();
 }
 skipBtn.onclick = () => {
   interrupt(); if (cur) cur.resolve(); SFX.click();
