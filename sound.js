@@ -422,6 +422,11 @@
     eat() { const t = ac.currentTime; for (let i = 0; i < 7; i++) noise(t + i * 0.13 + Math.random() * 0.03, 0.06, "bandpass", 1300 + Math.random() * 1200, 800, 0.28, 1.4); },
     fanfare() { const t = ac.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.32]].forEach(([f, d]) => tone(t + d, f, f, d > 0.3 ? 0.5 : 0.14, 0.1, "square")); },
     lightsOff() { const t = ac.currentTime; noise(t, 0.03, "bandpass", 3000, 3000, 0.5, 4); tone(t, 1200, 300, 0.25, 0.06, "sine"); },
+    sneezeIn() { const t = ac.currentTime; noise(t, 0.45, "bandpass", 700, 1900, 0.07, 0.8); noise(t + 0.52, 0.4, "bandpass", 900, 2400, 0.09, 0.8); },   // «а… а-а…»: короткие вдохи
+    sneezeOut() { const t = ac.currentTime; noise(t, 0.05, "lowpass", 900, 500, 0.2, 0.8); noise(t + 0.03, 0.2, "highpass", 2600, 5400, 0.34, 0.7); tone(t + 0.02, 560, 300, 0.09, 0.05, "triangle"); },   // «пчх»
+    tvStatic(len = 0.5) { const t = ac.currentTime; noise(t, len, "highpass", 3800, 3200, 0.1, 0.5); tone(t, 15700, 15700, len, 0.004); },
+    rustle() { const t = ac.currentTime; noise(t, 0.7, "bandpass", 1300, 700, 0.1, 0.6); noise(t + 0.35, 0.6, "bandpass", 900, 1500, 0.08, 0.6); },
+    knock() { const t = ac.currentTime; [0, 0.22].forEach(d => { tone(t + d, 150, 70, 0.12, 0.3); noise(t + d, 0.06, "lowpass", 900, 300, 0.3, 0.8); }); },
     hiss() { const t = ac.currentTime; noise(t, 0.75, "highpass", 2600, 3800, 0.22, 0.7); },
     purrStart() {
       if (purr) return; const t = ac.currentTime;

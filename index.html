@@ -121,6 +121,7 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
   .aslot.empty .aq { font: 400 40px "Press Start 2P", Rubik, sans-serif; color: rgba(58,36,22,.4); }
   .aslot.empty .ad { font: 700 14px Rubik, sans-serif; color: rgba(58,36,22,.55); }
+  .aegg { margin: -4px 0 10px; text-align: center; font: 500 14px Rubik, sans-serif; color: #7a3a22; }
   .ahint { margin: 16px 0 10px; text-align: center; font: 600 16px Rubik, sans-serif; color: #3a2416; }
   .abtns { display: flex; justify-content: center; gap: 6px; }
   .abig { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(30,18,10,.7); border-radius: 14px; z-index: 5; }
@@ -150,6 +151,50 @@
     cursor: pointer; box-shadow: 0 4px 0 #3a2416; }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #3a2416; }
   .btn.alt { background: #d9eef5; }
+  /* метка «Сохранено»: появляется на 2 секунды после важных моментов */
+  #saved { position: fixed; left: max(14px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom)); z-index: 90; pointer-events: none;
+    display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: 10px; border: 3px solid #3a2416; background: #fffaf0; color: #3a2416;
+    font: 600 15px Rubik, sans-serif; box-shadow: 0 4px 0 rgba(58,36,22,.7); opacity: 0; transform: translateY(10px) scale(.96); transition: opacity .3s, transform .3s; }
+  #saved.show { opacity: 1; transform: none; }
+  #saved .spaw { position: relative; width: 22px; height: 22px; flex: 0 0 auto; }
+  #saved .spaw::before { content: ""; position: absolute; left: 5px; top: 9px; width: 13px; height: 11px; border-radius: 50% 50% 46% 46%; background: #c56a22; }
+  #saved .spaw i { position: absolute; width: 5px; height: 7px; border-radius: 50%; background: #c56a22; }
+  #saved .spaw i:nth-child(1) { left: 1px; top: 4px; } #saved .spaw i:nth-child(2) { left: 6px; top: 0; } #saved .spaw i:nth-child(3) { left: 12px; top: 0; } #saved .spaw i:nth-child(4) { left: 17px; top: 4px; }
+  #saved.warn { max-width: min(520px, 80vw); background: #fff1e6; border-color: #8a2f1c; font-weight: 500; line-height: 1.35; align-items: flex-start; }
+  #saved.warn img { width: 40px; flex: 0 0 auto; image-rendering: pixelated; }
+  /* экран «Домой»: на телефоне до вступления просим добавить сайт на экран «Домой» */
+  #home { position: fixed; inset: 0; z-index: 45; display: none; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box;
+    background: radial-gradient(circle at 30% 30%, rgba(58,36,22,.88), rgba(14,10,20,.94) 75%); font-family: Rubik, sans-serif; color: #2b1d14; }
+  html.homeask #home { display: flex; }
+  html.phone.portrait.homeask #rotate { display: none; }
+  html.phone.portrait.homeask body > #home { visibility: visible; }
+  #home .hbox { display: flex; gap: 22px; align-items: center; max-width: 900px; width: 100%; animation: pop .35s ease-out; }
+  #home .hcat { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; width: 220px; }
+  #home .hcat img { width: 150px; image-rendering: pixelated; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+  #home .hsay { order: -1; position: relative; background: #fffaf0; border: 3px solid #2b1d14; border-radius: 12px; padding: 10px 14px; font-size: 16px; line-height: 1.35;
+    margin-bottom: 14px; box-shadow: 0 4px 0 rgba(43,29,20,.5); }
+  #home .hsay::after { content: ""; position: absolute; left: 50%; bottom: -11px; margin-left: -9px; border: 9px solid transparent; border-top-color: #2b1d14; border-bottom: 0; }
+  #home .hmain { flex: 1 1 auto; background: #fffaf0; border: 3px solid #2b1d14; border-radius: 14px; padding: 16px 20px 14px; box-shadow: 0 6px 0 rgba(43,29,20,.55); }
+  #home h2 { margin: 0 0 6px; font: 400 16px/1.5 "Press Start 2P", Rubik, sans-serif; color: #7a3a22; }
+  #home .hlead { margin: 0 0 10px; font-size: 15px; line-height: 1.4; color: #4a3424; }
+  #home ol { margin: 0 0 12px; padding-left: 24px; font-size: 16px; line-height: 1.4; }
+  #home li { margin: 0 0 6px; }
+  #home li small { display: block; font-size: 13.5px; color: #6b5444; }
+  #home .ico { display: inline-block; vertical-align: -4px; width: 20px; height: 20px; margin: 0 2px; }
+  #home .hbtns { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+  #home .hbtns .btn { margin: 0; font-size: 16px; padding: 11px 18px; }
+  #home .btn.main { background: #ffcf7a; }
+  #home .hnote { margin: 10px 0 0; font-size: 13px; line-height: 1.35; color: #6b5444; }
+  #home .hskip { display: inline-block; margin-top: 8px; font-size: 13.5px; color: #7a3a22; text-decoration: underline; cursor: pointer; background: none; border: 0; padding: 4px 0; font-family: inherit; }
+  #home .hinstall { display: none; }
+  #home.can-install .hinstall { display: inline-block; }
+  @media (orientation: portrait) {
+    #home { align-items: flex-start; overflow-y: auto; }
+    #home .hbox { flex-direction: column; gap: 10px; }
+    #home .hcat { width: auto; }
+    #home .hcat img { width: 96px; }
+    #home .hsay { font-size: 15px; margin-bottom: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -201,18 +246,46 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const KEY = "viski7.progress";
 let P = { intro: false, calFound: false, days: {} };
 try { const s = localStorage.getItem(KEY); if (s) P = Object.assign(P, JSON.parse(s)); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+// важные шаги (открыт конверт, пройдена игра, карточка, подарок найден): после них показываем метку «Сохранено»
+const milestones = () => { let n = 0; for (const d in P.days) { const x = P.days[d] || {}; n += !!x.openedAt + !!x.game + !!x.card + !!x.found; } return n; };
+let savedSig = milestones(), saveBroken = false;
+const save = () => {
+  try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) { saveFailed(); return; }
+  const m = milestones(); if (m > savedSig) { savedSig = m; showSaved(); } else savedSig = m;
+};
+let savedEl = null, savedT = 0;
+function savedBox() { if (!savedEl) { savedEl = document.createElement("div"); savedEl.id = "saved"; document.body.appendChild(savedEl); } return savedEl; }
+function showSaved() {
+  if (saveBroken) return;
+  const el = savedBox(); el.className = ""; el.innerHTML = `<span class="spaw"><i></i><i></i><i></i><i></i></span>Сохранено ✓`;
+  clearTimeout(savedT); requestAnimationFrame(() => el.classList.add("show"));
+  savedT = setTimeout(() => el.classList.remove("show"), 2200);
+}
+function saveFailed() {                 // браузер не даёт сохранять: один раз за визит предупреждаем словами Виски
+  if (saveBroken) return; saveBroken = true;
+  setTimeout(() => {
+    const el = savedBox(); el.className = "warn";
+    el.innerHTML = `<img src="assets/whisky_talk.png" alt=""><span>${String((window.LINES && LINES["save.fail"] || [""])[0])}</span>`;
+    clearTimeout(savedT); requestAnimationFrame(() => el.classList.add("show"));
+    savedT = setTimeout(() => el.classList.remove("show"), 8000);
+  }, 1500);
+}
+try { localStorage.setItem("viski7.check", "1"); localStorage.removeItem("viski7.check"); } catch (e) { saveFailed(); }
 
 if (location.hash === "#sbros") { try { localStorage.removeItem(KEY); } catch (e) {} P = { intro: false, calFound: false, days: {} }; }
 const DEV = false;                    // панель разработки; перед подарком поставить false
 let TEST = DEV && location.hash === "#vse-dni";   // в финальной версии этот адрес ничего не открывает
 const testEl = document.getElementById("test");
 function renderTestBar() {
-  testEl.innerHTML = `${TEST ? "Тест: все дни открыты" : "Тест: по 12 часов"} <a id="tgl">${TEST ? "закрыть дни" : "открыть все дни"}</a> <a id="skip12">⏩ −12 ч</a> <a id="reset">↺ начать сначала</a> <a id="bon">★ бонус</a> <a id="fwt">✦ салют</a>`;
+  testEl.innerHTML = `${TEST ? "Тест: все дни открыты" : "Тест: по 12 часов"} <a id="tgl">${TEST ? "закрыть дни" : "открыть все дни"}</a> <a id="skip12">⏩ −12 ч</a> <a id="reset">↺ начать сначала</a> <a id="bon">★ бонус</a> <a id="fwt">✦ салют</a> <a id="homeT">экран «Домой»</a> <a id="rSn">чих</a> <a id="rZm">беготня</a> <a id="rSw">снежинки</a>`;
   testEl.querySelector("#skip12").onclick = () => { for (const d in P.days) if (P.days[d].openedAt) P.days[d].openedAt -= GAP; save(); if (calOpen) renderCal(); };
   testEl.querySelector("#bon").onclick = () => window.openBonus && window.openBonus({ beforeShow: () => { calEl.classList.remove("open"); calOpen = false; } });
   testEl.querySelector("#tgl").onclick = () => { TEST = !TEST; renderTestBar(); if (calOpen) renderCal(); };
   testEl.querySelector("#reset").onclick = () => window.__restart && window.__restart();
+  testEl.querySelector("#homeT").onclick = () => showHome();
+  testEl.querySelector("#rSn").onclick = () => window.__react("sneeze");
+  testEl.querySelector("#rZm").onclick = () => window.__react("zoomies");
+  testEl.querySelector("#rSw").onclick = () => window.__react("snow");
   testEl.querySelector("#fwt").onclick = () => { window.__fwTest = performance.now() + 20000; };
 }
 if (DEV || TEST) { testEl.style.display = "block"; renderTestBar(); }
@@ -325,13 +398,13 @@ async function turnTo(dir, my) {                   // разворот чере�
   const name = W.face > 0 ? "turn" : "turnBack"; W.face = 1;
   await playOnce(name, 7, my); W.face = dir;
 }
-async function walkTo(x, my, run = false) {
+async function walkTo(x, my, run = false, spd = 0) {
   x = Math.max(430, Math.min(1800, x));
   if (Math.abs(x - W.x) < 4) return;
   await getUp(my);
   await turnTo(x > W.x ? 1 : -1, my);
   setAnim(run ? "run" : "walk", run ? 13 : 14);
-  W.speed = run ? 470 : 185; W.moveTo = x; W.ctx = "walk";
+  W.speed = spd || (run ? 470 : 185); W.moveTo = x; W.ctx = "walk";
   while (W.moveTo !== null) { if (my !== tok) { W.moveTo = null; throw CANCEL; } await sleepMs(30); }
   if (my !== tok) throw CANCEL;                   // остановили на ходу (погладили, позвали): не садимся поверх новой позы
   await playOnce("sitDown", 8, my); setAnim("sit", 2.5);
@@ -355,6 +428,71 @@ async function jump(tx, ty, my) {
 }
 async function sitIdle(ms, my, c = "sitting") { setAnim("sit", 2.5); W.ctx = c; await wait(ms, my); }
 
+// ---------- секретные реакции ----------
+const R = { sneezeAt: now() + rnd(180e3, 360e3), zoomAt: now() + rnd(360e3, 600e3), snowAt: now() + rnd(60e3, 150e3), inT: Infinity, snT: Infinity };
+const ease = (k) => k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k);
+function jerkNow(t) {                                  // чих: вдох (чуть вытягивается), «апчхи» (сжимается), потом лёгкая тряска
+  if (t >= R.inT && t < R.snT) { const k = ease((t - R.inT) / 900); return { dx: 0, sx: -0.008 * k, sy: 0.02 * k }; }
+  if (t >= R.snT && t < R.snT + 260) { const p = Math.sin(Math.PI * Math.min(1, (t - R.snT) / 260 * 1.5)); return { dx: 0, sx: 0.02 * p, sy: -0.05 * p }; }
+  if (t >= R.snT + 260 && t < R.snT + 710) { const k = (t - R.snT - 260) / 450; return { dx: Math.sin(k * 40) * 2.5 * (1 - k), sx: 0, sy: 0 }; }
+  return null;
+}
+const mist = [];
+function drawMist(t) {
+  if (!mist.length) return;
+  ctx.save();
+  for (let i = mist.length - 1; i >= 0; i--) {
+    const m = mist[i], k = (t - m.t) / m.life; if (k > 1) { mist.splice(i, 1); continue; }
+    const x = m.x + m.vx * k * (1 - k * 0.35), y = m.y + m.vy * k + 30 * k * k, sz = Math.round(m.s * (1 + k * 0.8));
+    ctx.globalAlpha = (1 - k) * 0.85; ctx.fillStyle = m.c; ctx.fillRect(Math.round(x - sz / 2), Math.round(y - sz / 2), sz, sz);
+  }
+  ctx.restore();
+}
+const noseAt = () => { const b = catBox(); return [W.face > 0 ? b.x + b.w * 0.86 : b.x + b.w * 0.14, b.y + b.h * 0.33]; };
+async function sneeze(my) {
+  try {
+    W.ctx = "sneeze";
+    setAnim("yawn", 1, false); W.t0 = now(); R.inT = now(); SFX.sneezeIn();
+    { const [x, y] = noseAt(); puff("а…", x + 10 * W.face, y - 40); }
+    await wait(520, my);
+    W.t0 = now() - 1000; { const [x, y] = noseAt(); puff("а-а…", x + 20 * W.face, y - 46); }
+    await wait(520, my);
+    R.snT = now(); setAnim("talk", 1); W.t0 = now() - 1000; SFX.sneezeOut();
+    { const [x, y] = noseAt(); puff("АПЧХИ!", x + 60 * W.face, y - 34, true);
+      for (let i = 0; i < 22; i++) mist.push({ x: x + 4 * W.face, y: y + 6, vx: W.face * (60 + Math.random() * 110), vy: -25 + Math.random() * 60, s: 3 + Math.random() * 4, life: 500 + Math.random() * 400, t: now(), c: Math.random() < 0.7 ? "#fff8ec" : "#dfe9ff" }); }
+    await wait(300, my);
+    setAnim("alert", 1);
+    await wait(650, my);
+    say("react.sneeze", { prio: 1 });
+    await wait(2600, my);
+    setAnim("sit", 2.5); W.ctx = "sitting";
+  } finally { R.inT = R.snT = Infinity; }
+}
+async function zoomies(my) {                          // «Срочное дело.» на бегу, «Уже не срочное.» после остановки
+  const far = W.x < 1100 ? rnd(1450, 1760) : rnd(470, 760);
+  setAnim("alert", 1); W.ctx = "zoom"; await wait(380, my);
+  SFX.whoosh(); say("react.zoom.run", { prio: 1, dur: 4000 });
+  await walkTo(far, my, true, 760);
+  await wait(550, my);
+  say("react.zoom.stop", { prio: 1 });
+  await sitIdle(3000, my);
+}
+const SILL = { x: 1012, y: 524 };
+async function snowHunt(my) {                         // запрыгивает на подоконник и ловит снежинки лапой
+  await walkTo(SILL.x + 70, my);
+  W.perchDown = SILL.x + 60;
+  try { await jump(SILL.x, SILL.y, my); }
+  catch (e) { W.x = SILL.x; W.y = SILL.y; W.onBed = true; A.__force = null; setAnim("sit", 2.5); throw e; }   // прервали в прыжке: не зависаем в воздухе
+  setAnim("lookup", 1); W.ctx = "window"; await wait(1400, my);
+  for (let i = 0; i < 2; i++) { W.face = i ? -1 : 1; SFX.whoosh(); setAnim("swat", 7, false); await wait(900, my); setAnim("lookup", 1); await wait(600, my); }
+  say("react.snow", { prio: 1 });
+  await wait(2800, my);
+  try { await jump(W.perchDown, FLOOR, my); }
+  catch (e) { W.x = W.perchDown; W.y = FLOOR; W.onBed = false; A.__force = null; setAnim("sit", 2.5); W.perchDown = 0; throw e; }
+  W.perchDown = 0;
+  await sitIdle(2500, my);
+}
+
 // жизнь Виски
 let lifeOn = false;
 async function life() {
@@ -363,17 +501,22 @@ async function life() {
     const my = tok;
     try {
       if (busy() || now() < W.calmUntil) { await sleepMs(300); continue; }
+      if (!W.onBed && !W.asleep && !cur && W.anim === "sit") {                 // секретные реакции: редко и только когда сидит спокойно
+        if (now() > R.sneezeAt) { R.sneezeAt = now() + rnd(600e3, 900e3); await sneeze(my); continue; }
+        if (now() > R.zoomAt) { R.zoomAt = now() + rnd(720e3, 1200e3); await zoomies(my); continue; }
+      }
       if (!W.onBed && Math.random() < 0.3) { if (Math.random() < 0.4) { await playOnce("lieDown", 6, my); setAnim("loaf", 0.25); W.ctx = "sitting"; await wait(rnd(8000, 15000), my); await playOnce("lieUp", 6, my); } else await sitIdle(rnd(5000, 10000), my); continue; }
       if (W.onBed) {
         if (W.asleep) { if (W.anim !== "sleep") setAnim("sleep", 1.2); await wait(rnd(6000, 14000), my); await wakeUp(my, true); }
         else if (W.anim === "wake" || W.anim === "yawn") setAnim("sit", 2.5);
-        await jump(BED_EDGE, FLOOR, my); W.asleep = false;
+        await jump(W.perchDown || BED_EDGE, FLOOR, my); W.perchDown = 0; W.asleep = false;
         continue;
       }
       if (floorGifts().length && Math.random() < 0.09) { await sniffGifts(my); continue; }
       const r = Math.random();
       if (r < 0.28) { await walkTo(rnd(450, 1780), my); await sitIdle(rnd(6000, 12000), my); }
       else if (r < 0.40) { await walkTo(rnd(500, 1500), my); setAnim("groom", 3.5); W.ctx = "groom"; await wait(rnd(5000, 8000), my); }
+      else if (r < 0.50 && now() > R.snowAt && Math.random() < 0.45) { R.snowAt = now() + rnd(240e3, 420e3); await snowHunt(my); }
       else if (r < 0.50) { await walkTo(1010, my); setAnim("lookup", 1); W.face = 1; W.ctx = "window"; await wait(rnd(7000, 12000), my); }
       else if (r < 0.60) { await walkTo(1470, my); W.ctx = "computer"; await sitIdle(rnd(6000, 10000), my, "computer"); }
       else if (r < 0.68) { await eatAtBowl(my, false); }
@@ -543,8 +686,18 @@ function touchPetTip() {
   hintEl.style.top = Math.max(6, Math.min(stage.clientHeight - hh - 6, (b.y + b.h * 0.55) * s - hh / 2)) + "px";
   tipUntil = now() + 3200; clearTimeout(touchTipT); touchTipT = setTimeout(() => { hintEl.style.display = "none"; }, 3200);
 }
+let clickTimes = [], clickCool = 0;
 function catClick() {
   touchPetTip();
+  clickTimes = clickTimes.filter(c => now() - c < 2500); clickTimes.push(now());
+  if (clickTimes.length >= 4 && now() > clickCool && !W.asleep && !introRunning) {     // тыкают без остановки: Виски возмущена
+    clickTimes = []; clickCool = now() + 25000;
+    interrupt(); W.calmUntil = now() + 6000; W.face = W.x < BW / 2 ? 1 : -1; SFX.meow("angry");
+    setAnim("angry", 1);
+    const k = Math.random() < 0.5 ? (TOUCH ? "react.clicks.touch" : "react.clicks.mouse") : "react.clicks";
+    say(k, { prio: 2 }).then(() => { if (W.anim === "angry") setAnim("sit", 2.5); });
+    return;
+  }
   if (W.asleep) { say("pet.sleeping", { prio: 2 }); return; }
   interrupt(); W.calmUntil = now() + 5000; W.face = W.x < BW / 2 ? 1 : -1; SFX.meow();
   setAnim("talk", 3); say("idle.look", { prio: 2 }).then(() => { if (!pet.on && W.anim === "talk") setAnim("sit", 2.5); });
@@ -559,11 +712,71 @@ cv.addEventListener("click", (e) => {
   const z = zoneAt(p.x, p.y);
   if (!z) { if (TOUCH && Math.hypot(p.x - W.x, p.y - (W.y - 90)) < 300) startPlay(p, true); return; }
   if (z.k === "bowl") { bowlClick(); return; }
-  z.flash = now(); SFX.click();
+  z.flash = now(); SFX.click(); noteSeen(z.k);
   if (z.k === "calendar") { openCal(); return; }
+  if (z.k === "tv" && (!P.eggTv || Math.random() < 0.3)) { P.eggTv = 1; save(); tvEvent(); return; }
+  if (z.k === "curtain" && (!P.eggCur || Math.random() < 0.3)) { P.eggCur = 1; save(); curtainEvent(); return; }
+  if (z.k === "door" && !W.onBed && !W.asleep && !pet.on && (!P.eggDoor || Math.random() < 0.3)) { P.eggDoor = 1; save(); doorEvent(); return; }
   if (!W.onBed && !pet.on && !introRunning) { W.face = (z.x + z.w / 2) > W.x ? 1 : -1; }
   say(objectKey(z.k), { prio: 2 });
 });
+
+// ---------- пасхалки: все предметы, телевизор, шторы, дверь ----------
+const EGG_KINDS = [...new Set(ZONES.map(z => z.k)), "bowl"];
+const seenCount = () => EGG_KINDS.filter(k => P.seen && P.seen[k]).length;
+function noteSeen(k) {
+  if (!EGG_KINDS.includes(k)) return;
+  P.seen = P.seen || {}; if (P.seen[k]) return;
+  P.seen[k] = 1; save();
+  if (!P.eggAll && seenCount() === EGG_KINDS.length) { P.eggAll = true; save(); setTimeout(eggAll, 2800); }
+}
+function eggAll() {                                  // скрытое достижение: два облачка подряд
+  if (busy() || cur) { setTimeout(eggAll, 2500); return; }
+  SFX.fanfare(); setAnim(W.onBed ? W.anim : "happy", 1);
+  say("egg.all1", { prio: 2 }).then(() => { say("egg.all2", { prio: 2 }).then(() => { if (W.anim === "happy") setAnim("sit", 2.5); }); });
+}
+const TV = { x: 532, y: 397, w: 240, h: 143 };
+let tvFx = 0, curFx = 0;
+function reactTo(x, key) {                           // Виски поворачивается к источнику шума и удивляется
+  if (W.asleep) return;                              // спит: эффект есть, реплики нет
+  if (!W.onBed && !pet.on && !introRunning) { interrupt(); W.calmUntil = now() + 5500; W.face = x > W.x ? 1 : -1; setAnim("alert", 1); }
+  setTimeout(() => say(key, { prio: 2 }).then(() => { if (W.anim === "alert") setAnim("sit", 2.5); }), 700);
+}
+function tvEvent() { tvFx = now(); SFX.tvStatic(0.55); setTimeout(() => SFX.tvStatic(0.4), 1500); reactTo(TV.x + TV.w / 2, "egg.tv"); }
+function drawTvFx(t) {                               // телевизор сам переключает каналы: помехи, настроечная таблица, помехи
+  if (!tvFx) return; const e = t - tvFx; if (e > 1950) { tvFx = 0; return; }
+  ctx.save(); ctx.beginPath(); ctx.rect(TV.x, TV.y, TV.w, TV.h); ctx.clip();
+  if (e < 600 || e > 1500) {
+    for (let y = TV.y; y < TV.y + TV.h; y += 5) for (let x = TV.x; x < TV.x + TV.w; x += 5) { const v = 40 + Math.random() * 200 | 0; ctx.fillStyle = `rgb(${v},${v},${v + 12})`; ctx.fillRect(x, y, 5, 5); }
+  } else {
+    const C = ["#c9c9c9", "#c9c92a", "#2ac9c9", "#2ac92a", "#c92ac9", "#c92a2a", "#2a2ac9"], bw = TV.w / 7;
+    C.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(TV.x + i * bw, TV.y, bw + 1, TV.h * 0.72); });
+    ctx.fillStyle = "#14141c"; ctx.fillRect(TV.x, TV.y + TV.h * 0.72, TV.w, TV.h * 0.28);
+    ctx.fillStyle = "#e8e8e8"; ctx.fillRect(TV.x + TV.w * 0.36, TV.y + TV.h * 0.78, TV.w * 0.28, TV.h * 0.14);
+  }
+  ctx.globalAlpha = 0.18; ctx.fillStyle = "#000"; for (let y = TV.y; y < TV.y + TV.h; y += 3) ctx.fillRect(TV.x, y, TV.w, 1);
+  ctx.restore();
+}
+function curtainEvent() { curFx = now(); SFX.rustle(); reactTo(1015, "egg.curtain"); }
+function drawCurtainFx(t) {                          // шторы колышутся сами, сильнее внизу, и успокаиваются
+  if (!curFx) return; const e = t - curFx; if (e > 2800) { curFx = 0; return; }
+  const decay = 1 - e / 2800;
+  for (const [cx, cw, ph] of [[800, 92, 0], [1135, 92, 1.7]]) {
+    for (let y = 60; y < 650; y += 4) {
+      const k = (y - 60) / 590, off = Math.round(7 * decay * k * Math.sin(e / 140 + y / 55 + ph));
+      if (off) ctx.drawImage(room, cx, y, cw, 4, cx + off, y, cw, 4);
+    }
+  }
+}
+function doorEvent() {                               // стук в дверь: Виски бежит проверять
+  SFX.knock(); interrupt(); W.calmUntil = now() + 12000; const my = tok;
+  (async () => {
+    W.face = 1; setAnim("alert", 1); await wait(550, my);
+    await walkTo(1735, my, true); W.face = 1; setAnim("lookup", 1); await wait(1000, my);
+    await say("egg.door", { prio: 2 });
+    if (my === tok) setAnim("sit", 2.5);
+  })().catch(() => {});
+}
 
 // ---------- календарь ----------
 const calEl = document.getElementById("cal"), board = document.getElementById("board");
@@ -621,7 +834,7 @@ function renderAlbum() {
   board.innerHTML = `<button class="close" title="Закрыть">×</button>
     <h2>Альбом Виски</h2>
     <div class="album">${ALL.slice(0, 4).map(slot).join("")}<div class="arow2">${ALL.slice(4).map(slot).join("")}</div></div>
-    <div class="ahint">${hint}</div>
+    <div class="ahint">${hint}</div>${P.eggAll ? `<div class="aegg">★ Всё обнюхано</div>` : seenCount() ? `<div class="aegg">Обнюхано предметов: ${seenCount()} из ${EGG_KINDS.length}</div>` : ""}
     <div class="abtns"><button class="btn alt" id="albback">◂ К календарю</button>${n === 7 && window.openBonus ? `<button class="btn main" id="albbonus">★ Секретный бонус</button>` : ""}</div>
     <div class="abig"></div>`;
   board.querySelector(".close").onclick = closeCal;
@@ -829,7 +1042,7 @@ function draw() {
   if (!busy() && P.intro && now() > calHintAt && !P.calFound) { calHintAt = Infinity; say("intro.calendar_hint", { prio: 2 }); }
 
   ctx.drawImage(room, 0, 0);
-  drawScreens(t);
+  drawScreens(t); drawTvFx(t); drawCurtainFx(t);
   // снег
   ctx.save(); ctx.beginPath(); ctx.rect(895, 90, 237, 420); ctx.clip();
   ctx.fillStyle = "rgba(235,242,255,0.9)";
@@ -885,6 +1098,7 @@ function draw() {
   const BREATH = { sit: [0.012, 0.45], talk: [0.010, 0.45], lookup: [0.012, 0.45], loaf: [0.016, 0.3], sleep: [0.022, 0.25], love: [0.014, 0.5], happy: [0.012, 0.45], tail: [0.010, 0.6], alert: [0.008, 0.5], angry: [0.010, 0.6], shy: [0.012, 0.4], sad: [0.010, 0.35], puzzled: [0.008, 0.5] }[W.anim];
   const br = BREATH ? BREATH[0] * Math.sin(t / 1000 * Math.PI * 2 * BREATH[1]) : 0;
   ctx.save(); ctx.translate(W.x, W.y); ctx.scale(W.face * s * (1 - br * 0.4), s * (1 + br));
+  { const j = jerkNow(t); if (j) { ctx.translate(j.dx, 0); ctx.scale(1 + j.sx, 1 + j.sy); } }
   // тень
   if (!W.onBed || true) { ctx.fillStyle = "rgba(20,10,10,0.22)"; ctx.beginPath(); ctx.ellipse(0, -2, f.w * 0.36, 9, 0, 0, Math.PI * 2); ctx.fill(); }
   ctx.drawImage(atlas, f.x, f.y, f.w, f.h, -f.ax, -f.ay, f.w, f.h);
@@ -899,6 +1113,7 @@ function draw() {
     ctx.save(); ctx.globalAlpha = (1 - fk) * 0.9; ctx.translate(fade.x, fade.y); ctx.scale(fade.face * s, s);
     ctx.drawImage(atlas, fade.f.x, fade.f.y, fade.f.w, fade.f.h, -fade.f.ax, -fade.f.ay, fade.f.w, fade.f.h); ctx.restore();
   }
+  drawMist(t);
   drawPuffs(t);
   // zZ
   if (W.asleep && W.anim === "sleep") {
@@ -951,6 +1166,7 @@ async function eatAtBowl(my, run) {
   setAnim("happy", 1); await wait(1400, my); await sitIdle(1600, my);
 }
 function bowlClick() {
+  noteSeen("bowl");
   if (bowlFull()) { SFX.pop(); const k = objectKey("bowl"); say(k === "object.bowl" ? "bowl.full" : k, { prio: 2 }); return; }
   P.bowlFull = true; save(); bowlPop = now(); SFX.crunch(); setTimeout(() => SFX.crunch(), 140); setTimeout(() => SFX.crunch(), 300);
   for (let i = 0; i < 9; i++) crumbs.push({ x: BOWL.x + rnd(-22, 22), y: BOWL.y - 120 - rnd(0, 50), vx: rnd(-15, 15), vy: rnd(40, 120), t: now(), fall: BOWL.y - 34 });
@@ -962,11 +1178,12 @@ function bowlClick() {
 
 // ---------- надписи-облачка («хрум», «нюх») и крошки ----------
 const puffs = [], crumbs = [];
-function puff(text, x, y) { puffs.push({ text, x, y, t: now() }); }
+function puff(text, x, y, big) { puffs.push({ text, x, y, t: now(), big }); }
 function drawPuffs(t) {
   ctx.save(); ctx.font = "12px 'Press Start 2P', monospace"; ctx.textAlign = "center";
   for (let i = puffs.length - 1; i >= 0; i--) {
     const p = puffs[i], k = (t - p.t) / 1100; if (k > 1) { puffs.splice(i, 1); continue; }
+    ctx.font = (p.big ? "22px" : "12px") + " 'Press Start 2P', monospace";
     ctx.globalAlpha = Math.sin(Math.PI * Math.min(1, k * 1.4)) * 0.95;
     ctx.lineWidth = 4; ctx.strokeStyle = "rgba(43,29,20,.85)"; ctx.strokeText(p.text, p.x, p.y - k * 34);
     ctx.fillStyle = "#fff4dc"; ctx.fillText(p.text, p.x, p.y - k * 34);
@@ -1217,7 +1434,14 @@ window.fadeVeil = (fn) => {
   });
 };
 
-if (DEV) { window.__openDay = openDay; window.__openCal = openCal; }
+if (DEV) {
+  window.__openDay = openDay; window.__openCal = openCal; window.__R = R;
+  window.__react = (k) => {                           // тест: запустить секретную реакцию сразу
+    if (W.onBed || W.asleep || introRunning) return;
+    interrupt(); W.calmUntil = now() + 1e9; const my = tok;
+    ({ sneeze, zoomies, snow: snowHunt })[k](my).catch(() => {}).finally(() => { if (my === tok) W.calmUntil = now() + 3000; });
+  };
+}
 window.VISKI = {
   atlas, A, line, save, getP: () => P,
   backToRoom(key) {
@@ -1237,9 +1461,77 @@ window.__restart = () => {
   P = { intro: false, calFound: false, days: {} };
   calEl.classList.remove("open"); calOpen = false; pet.on = false;
   introRunning = true; interrupt(); W.moveTo = null; W.v = 0; if (cur) cur.resolve(); calHintAt = Infinity;
-  stage.classList.remove("on"); setTimeout(() => { stage.classList.add("on"); intro(); }, 600);
+  hideHome(); stage.classList.remove("on"); setTimeout(() => { stage.classList.add("on"); startIntro(); }, 600);
 };
 addEventListener("hashchange", () => { if (location.hash === "#sbros") window.__restart(); });
+
+// ---------- экран «Домой» ----------
+// На телефоне в браузере, до вступления: сначала добавить сайт на экран «Домой», чтобы игра шла во весь экран,
+// а прогресс не разделился между браузером и иконкой (на iPhone у них разные хранилища).
+const ROOT = document.documentElement;
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const IOS_DEV = ROOT.classList.contains("ios");
+let installEvt = null;
+addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; const h = document.getElementById("home"); if (h) h.classList.add("can-install"); });
+addEventListener("appinstalled", () => { if (ROOT.classList.contains("homeask")) homeDone(); });
+function needHome() {
+  return !P.intro && !P.homeSkip && ROOT.classList.contains("phone") && !ROOT.classList.contains("standalone") && window.top === window;
+}
+const ICO_SHARE = `<svg class="ico" viewBox="0 0 20 20" fill="none" stroke="#2b6fd6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-1.5"/><path d="M10 12.5V2.5M6.8 5.5 10 2.3l3.2 3.2"/></svg>`;
+function homeSteps() {
+  return IOS_DEV ? `
+      <li>Нажми «Поделиться» ${ICO_SHARE}<small>Если его не видно, он спрятан в меню «•••».</small></li>
+      <li>Выбери «На экран «Домой»».<small>Если пункта нет, пролистай список вниз.</small></li>
+      <li>Проверь, что включено «Открыть как веб-приложение», и нажми «Добавить».</li>
+      <li>Нажми кнопку ниже.</li>` : `
+      <li>Нажми «⋮» в правом верхнем углу браузера.</li>
+      <li>Выбери «Добавить на главный экран» или «Установить приложение».</li>
+      <li>Подтверди и нажми кнопку ниже.</li>`;
+}
+function showHome() {
+  let h = document.getElementById("home");
+  if (!h) { h = document.createElement("div"); h.id = "home"; document.body.appendChild(h); }
+  if (installEvt) h.classList.add("can-install");
+  h.innerHTML = `<div class="hbox">
+    <div class="hcat"><img src="assets/whisky_talk.png" alt=""><div class="hsay">${esc(line("home.ask"))}</div></div>
+    <div class="hmain">
+      <h2>Перед тем как начать</h2>
+      <p class="hlead">Так игра откроется на весь экран, а прогресс точно не потеряется.</p>
+      <ol>${homeSteps()}</ol>
+      <div class="hbtns"><button class="btn main hinstall" id="hinst">Установить одним нажатием</button><button class="btn ${installEvt ? "" : "main"}" id="hdone">Готово, добавил</button></div>
+      <p class="hnote">Если ссылка открылась внутри Telegram или другого мессенджера, сначала открой её в ${IOS_DEV ? "Safari" : "Chrome"}.</p>
+      <button class="hskip" id="hskip">Играть прямо в браузере</button>
+    </div></div>`;
+  ROOT.classList.add("homeask");
+  h.querySelector("#hdone").onclick = () => { SFX.click(); homeDone(); };
+  h.querySelector("#hskip").onclick = homeSkip;
+  h.querySelector("#hinst").onclick = async () => {
+    if (!installEvt) return;
+    try { installEvt.prompt(); const r = await installEvt.userChoice; if (r && r.outcome === "accepted") homeDone(); } catch (e) {}
+    installEvt = null; h.classList.remove("can-install");
+  };
+}
+function homeDone() {
+  const h = document.getElementById("home"); if (!h) return;
+  h.innerHTML = `<div class="hbox">
+    <div class="hcat"><img src="assets/whisky_talk.png" alt=""><div class="hsay">${esc(line("home.done"))}</div></div>
+    <div class="hmain">
+      <h2>Почти готово</h2>
+      <p class="hlead">Найди Виски на экране «Домой» и открой игру оттуда. Эту вкладку можно закрыть.</p>
+      <div class="hbtns"><button class="btn alt" id="hback">◂ Ещё не добавил</button></div>
+      <button class="hskip" id="hskip">Играть прямо в браузере</button>
+    </div></div>`;
+  h.querySelector("#hback").onclick = () => { SFX.click(); showHome(); };
+  h.querySelector("#hskip").onclick = homeSkip;
+}
+function homeSkip() {
+  SFX.click(); ROOT.classList.remove("homeask");
+  if (P.intro || introRunning) return;              // просмотр из тестовой панели: просто закрываем
+  P.homeSkip = true; save();
+  setTimeout(() => intro(), 250);
+}
+function hideHome() { ROOT.classList.remove("homeask"); }
+function startIntro() { if (needHome()) showHome(); else intro(); }
 
 // ---------- старт ----------
 document.getElementById("boot").classList.add("done");
@@ -1258,7 +1550,7 @@ if ("serviceWorker" in navigator && window.top === window && (location.protocol 
 }
 requestAnimationFrame(() => stage.classList.add("on"));
 requestAnimationFrame(draw);
-if (!P.intro) intro();
+if (!P.intro) startIntro();
 else { W.x = rnd(600, 1400); W.y = FLOOR; W.onBed = false; W.asleep = false; setAnim("sit", 2.5); if (!P.calFound) calHintAt = now() + 60000; life(); }
 })();
 </script>
