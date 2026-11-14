@@ -1,6 +1,32 @@
 // Телефонный режим. На телефоне сайт «видит» экран как маленький ноутбук (около 560 px по высоте) —
 // вся вёрстка и игры остаются как на компьютере, просто аккуратно уменьшаются. Вертикально — Виски просит
 // повернуть телефон. Во весь экран — через «На экран Домой» (iPhone) или «Добавить на главный экран» (Android).
+// Безопасная зона экрана: на айфонах с вырезом камера и динамики заходят на край картинки в горизонтальном положении.
+// Комната рисуется под вырезом целиком, а облачка и кнопки держим в безопасной зоне.
+window.SAFE = { l: 0, r: 0 };
+(() => {
+  const root = document.documentElement;
+  const force = new URLSearchParams(location.search).get("safe");      // для проверки: ?safe=60
+  let probe = null;
+  const measure = () => {
+    if (!probe && document.body) { probe = document.createElement("div"); probe.style.cssText = "position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)"; document.body.appendChild(probe); }
+    if (!probe) return;
+    const cs = getComputedStyle(probe);
+    // при уменьшенном масштабе страницы берём отступ с запасом: так он точно не меньше выреза
+    const z = window.visualViewport && visualViewport.scale < 1 ? 1 / visualViewport.scale : 1;
+    SAFE.l = force ? +force : Math.round((parseFloat(cs.paddingLeft) || 0) * z); SAFE.r = force ? +force : Math.round((parseFloat(cs.paddingRight) || 0) * z);
+    root.style.setProperty("--sl", SAFE.l + "px"); root.style.setProperty("--sr", SAFE.r + "px");
+  };
+  // left: желаемая позиция внутри el, w: ширина элемента; возвращает позицию, при которой он целиком в безопасной зоне
+  window.safeClamp = (el, left, w, pad = 8) => {
+    const r = el.getBoundingClientRect(), k = r.width / (el.clientWidth || 1) || 1;
+    const lo = Math.max(pad, (SAFE.l + pad - r.left) / k), hi = Math.min(el.clientWidth - pad, (innerWidth - SAFE.r - pad - r.left) / k);
+    return Math.max(lo, Math.min(hi - w, left));
+  };
+  addEventListener("DOMContentLoaded", measure); addEventListener("load", measure);
+  addEventListener("resize", () => setTimeout(measure, 50)); addEventListener("orientationchange", () => setTimeout(measure, 300));
+  setInterval(measure, 1500);
+})();
 (() => {
   const ua = navigator.userAgent || "";
   const touch = matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 1;

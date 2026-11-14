@@ -62,7 +62,7 @@
     #bonus.open { display: flex; }
     #bonus .bwrap { position: relative; }
     #bonus canvas { display: block; width: 100%; height: 100%; cursor: pointer; image-rendering: pixelated; }
-    #bonus .bskip { position: absolute; right: 1.4%; top: 2%; font: 600 15px Rubik, sans-serif; color: #fff4dc; background: rgba(0,0,0,.45); border: 2px solid rgba(255,244,220,.5);
+    #bonus .bskip { position: absolute; right: calc(1.4% + var(--sr, 0px)); top: 2%; font: 600 15px Rubik, sans-serif; color: #fff4dc; background: rgba(0,0,0,.45); border: 2px solid rgba(255,244,220,.5);
       border-radius: 8px; padding: 6px 12px; cursor: pointer; }
     #bonus .bend { position: absolute; left: 0; right: 0; bottom: 4%; display: none; justify-content: center; gap: 14px; }
     #bonus .bend.show { display: flex; }

@@ -47,7 +47,7 @@
   #skip.nudge { animation: nudge .7s ease-out; }
   @keyframes nudge { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.14); filter: brightness(1.35); } 60% { transform: scale(.97); } }
 
-  #skip { position: absolute; right: 1.2%; bottom: 2%; z-index: 6; font: inherit; font-size: max(12px, calc(16px * var(--u)));
+  #skip { position: absolute; right: calc(1.2% + var(--sr, 0px)); bottom: 2%; z-index: 6; font: inherit; font-size: max(12px, calc(16px * var(--u)));
     background: rgba(20,16,30,.65); color: #f4e6cf; border: 2px solid rgba(244,230,207,.4); border-radius: 8px; padding: .4em .9em; cursor: pointer; display: none; }
   #hint { position: absolute; z-index: 6; pointer-events: none; font-size: max(11px, calc(15px * var(--u))); color: #fff3df;
     background: rgba(30,20,20,.8); padding: .3em .6em; border-radius: 6px; display: none; white-space: nowrap; }
@@ -585,7 +585,7 @@ function placeBubble() {
   const hx = W.x + (W.face > 0 ? 25 : -25) * SIZE, hy = b.y + 6;
   const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
   let left = hx * s - bw / 2, top = hy * s - bh - 18 * s;
-  left = Math.max(8, Math.min(stage.clientWidth - bw - 8, left));
+  left = window.safeClamp ? safeClamp(stage, left, bw) : Math.max(8, Math.min(stage.clientWidth - bw - 8, left));
   top = Math.max(8, top);
   bubble.style.left = left + "px"; bubble.style.top = top + "px";
   bubble.style.setProperty("--tail", Math.max(16, Math.min(bw - 16, hx * s - left)) + "px");
@@ -682,7 +682,7 @@ function touchPetTip() {
   // сбоку от Виски, на уровне живота: сверху у неё облачко с репликой, снизу край экрана
   const right = (b.x + b.w) * s + 10, left = b.x * s - hw - 10;
   const goLeft = right + hw > stage.clientWidth - 6 && left > 6;
-  hintEl.style.left = Math.max(6, goLeft ? left : Math.min(stage.clientWidth - hw - 6, right)) + "px";
+  { const want = goLeft ? left : Math.min(stage.clientWidth - hw - 6, right); hintEl.style.left = (window.safeClamp ? safeClamp(stage, want, hw, 6) : Math.max(6, want)) + "px"; }
   hintEl.style.top = Math.max(6, Math.min(stage.clientHeight - hh - 6, (b.y + b.h * 0.55) * s - hh / 2)) + "px";
   tipUntil = now() + 3200; clearTimeout(touchTipT); touchTipT = setTimeout(() => { hintEl.style.display = "none"; }, 3200);
 }

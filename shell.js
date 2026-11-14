@@ -62,11 +62,11 @@
   .gm.open { display: flex; }
   .gm .wrap { position: relative; }
   .gm canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-  .gm .hud { position: absolute; left: 1.5%; top: 2.5%; display: flex; gap: 14px; align-items: center; color: #fff4dc; font-weight: 700;
+  .gm .hud { position: absolute; left: calc(1.5% + var(--sl, 0px)); top: 2.5%; display: flex; gap: 14px; align-items: center; color: #fff4dc; font-weight: 700;
     font-size: max(14px, calc(21px * var(--k))); background: rgba(30,20,30,.6); padding: .35em .8em; border-radius: 10px; pointer-events: none; }
   .gm .hud .lives span { display: inline-block; width: .9em; height: .9em; border-radius: 50%; margin-left: .25em; background: #e8463a; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25); }
   .gm .hud .lives span.off { background: rgba(255,255,255,.18); box-shadow: none; }
-  .gm .x { position: absolute; right: 1.5%; top: 2.5%; width: calc(44px * var(--k)); height: calc(44px * var(--k)); min-width: 32px; min-height: 32px;
+  .gm .x { position: absolute; right: calc(1.5% + var(--sr, 0px)); top: 2.5%; width: calc(44px * var(--k)); height: calc(44px * var(--k)); min-width: 32px; min-height: 32px;
     border-radius: 10px; border: 2px solid #3a2416; background: #f5e7c8; color: #3a2416; font: 700 18px Rubik, sans-serif; cursor: pointer; z-index: 7; }
   .gm .bubble { position: absolute; z-index: 6; max-width: calc(360px * var(--k)); background: #fffaf0; color: #2b1d14; border: 3px solid #2b1d14; border-radius: 10px;
     padding: .55em .8em; font-size: max(13px, calc(19px * var(--k))); line-height: 1.3; box-shadow: 0 4px 0 rgba(0,0,0,.25); pointer-events: none;
@@ -208,7 +208,7 @@
     function placeBubble() {
       const h = game.head && game.head(); if (!h) return;
       const s = wrap.clientWidth / W, bw = bub.offsetWidth, bh = bub.offsetHeight, hx = h.x * s, hy = h.y * s;
-      const left = Math.max(8, Math.min(wrap.clientWidth - bw - 8, hx - bw / 2)), top = Math.max(8, hy - bh - 14);
+      const left = (window.safeClamp ? safeClamp(wrap, hx - bw / 2, bw) : Math.max(8, Math.min(wrap.clientWidth - bw - 8, hx - bw / 2))), top = Math.max(8, hy - bh - 14);
       bub.style.left = left + "px"; bub.style.top = top + "px"; bub.style.setProperty("--tail", Math.max(16, Math.min(bw - 16, hx - left)) + "px");
     }
     // ---- цикл ----

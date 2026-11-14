@@ -469,12 +469,12 @@
   // ---------- кнопка и панель ----------
   const css = document.createElement("style");
   css.textContent = `
-  #snd { position: absolute; right: 1.2%; top: 2.2%; z-index: 7; width: calc(46px * var(--u)); height: calc(46px * var(--u)); min-width: 30px; min-height: 30px;
+  #snd { position: absolute; right: calc(1.2% + var(--sr, 0px)); top: 2.2%; z-index: 7; width: calc(46px * var(--u)); height: calc(46px * var(--u)); min-width: 30px; min-height: 30px;
     border-radius: 50%; border: 2px solid rgba(255,236,200,.55); background: rgba(24,18,34,.6); color: #ffe7b8; cursor: pointer;
     font: calc(20px * var(--u)) Rubik, sans-serif; display: flex; align-items: center; justify-content: center; }
   #snd.off { opacity: .75; }
   #snd svg { width: 58%; height: 58%; display: block; }
-  #sndp { position: absolute; right: 1.2%; top: calc(2.2% + 54px * var(--u)); z-index: 7; display: none; background: rgba(24,18,34,.88);
+  #sndp { position: absolute; right: calc(1.2% + var(--sr, 0px)); top: calc(2.2% + 54px * var(--u)); z-index: 7; display: none; background: rgba(24,18,34,.88);
     color: #fff1d8; border: 2px solid rgba(255,236,200,.35); border-radius: 12px; padding: 12px 14px; font: 14px Rubik, sans-serif; width: 230px; }
   #sndp.open { display: block; }
   #sndp label { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
